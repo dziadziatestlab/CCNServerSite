@@ -56,6 +56,10 @@ MAXPAYLOAD = 33554432
 class WebSocket(object):
 
    def __init__(self, server, sock, address):
+      
+      #Some object used by ccn project
+      self.ccnClients={}
+
       self.server = server
       self.client = sock
       self.address = address
