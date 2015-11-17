@@ -19,20 +19,43 @@ class ccnRegister(threading.Thread):
 
 	def run(self):
 		print 'ccnRegister thread started !'
-		name=ccn.Name(self.threadId)
+		name=ccn.Name(str(self.threadId))
 		print 'Name:',
 		print name
 		handler=ccn.CCN()
+
 		
-		"""
+		
 		interest_handler=ProducerClosure()
 		res=handler.setInterestFilter(name,interest_handler)
 		if(res<0):
 			print 'Some problems occured !'
-		"""
+		
 		handler.run(-1)
 		raise SystemError('Exited loop!')
 
+class makeCCNCall(threading.Thread):
+	def __init__(self,IdFrom,IdTo,callback):
+		threading.Thread.__init__(self)
+		self.threadId=IdFrom		
+		self.idFrom=IdFrom
+		self.idTo=IdTo
+		self.callback=callback
+		print 'makeCCNCall thread initialization'
+	def run(self):
+		print "Sending CCN request to: "+str(self.idTo)
+		urlName=self.idTo+'/call'+self.idFrom
+		print urlName
+		name=ccn.Name(str(urlName))
+		ccnHandler=ccn.CCN()
+		co=ccnHandler.get(name,timeoutms=2000)
+		if(co==None):
+			print 'No answer from server'
+		else:
+			print co.name
+			print co.content			
+			self.callback()
+		
 
 
 
@@ -64,6 +87,7 @@ class sendToCCN(threading.Thread):
 		co=hccn.get(nameStr,timeoutms=9000)
 		print nameStr
 		self.callback('Thread finished')
+
 
 
 class addNewClient(threading.Thread):
@@ -122,6 +146,17 @@ class SimpleEcho(WebSocket):
 		self.ccnClients[data['userId']]=data
 		self.showNumberOfClients()
 		
+	def makeCall(self,data):
+		print 'makeCall method called with params:',
+		print data['From'],
+		print data['To']
+
+		ccnCallThread=makeCCNCall(data['From'],data['To'],self.makeCallCallback)
+		ccnCallThread.start()
+
+
+	def makeCallCallback(self):
+		print 'makeCallCallback called'	
 
 	def showNumberOfClients(self):
 		print 'Number of CCN Clients:',
@@ -154,6 +189,11 @@ class SimpleEcho(WebSocket):
 				if dane['type']=='REGISTER':
 					print 'REGISTER METHOD PROCESING'
 					self.addNewClient(dane)	
+				if dane['type']=='CALL':
+					print 'CALL CONNECTION '
+					self.makeCall(dane)
+
+
 		if type(self.data) is bytearray:
 			#values=bytearray(self.data)
 			print 'Inside loop'
@@ -180,16 +220,23 @@ class ProducerClosure(ccn.Closure):
 			co=ccn.ContentObject(name)
 			co.content=payload
 			
+			handler=ccn.CCN()
+			key=handler.getDefaultKey()
+			kl=ccn.KeyLocator()
+			kl.key=key
+
 			si=ccn.SignedInfo()
 			si.publisherPublicKeyDigest=key.publicKeyID
 			si.type=ccn.CONTENT_DATA
 			si.keyLocator=kl
 			co.signedInfo=si
 
+			
+
 			co.sign(key)
 
 			if(co.matchesInterest(upcallInfo.Interest)):
-				res=h.put(co)
+				res=handler.put(co)
 				if(res>=0):
 					print payload
 					return ccn.RESULT_INTEREST_CONSUMED
