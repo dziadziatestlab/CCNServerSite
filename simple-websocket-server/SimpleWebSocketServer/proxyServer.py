@@ -193,6 +193,17 @@ class SimpleEcho(WebSocket):
 					print 'CALL CONNECTION '
 					self.makeCall(dane)
 
+				if dane['type']=='TEST':
+					print 'Test of connection with peer'
+					ss=json.dumps(dane,ensure_ascii=False)
+					
+					self.sendMessage(ss)
+					print type(self.data)	
+					print type(ss)				
+					print ss	
+					print self.data				
+					print 'Message to client sent.'
+
 
 		if type(self.data) is bytearray:
 			#values=bytearray(self.data)
