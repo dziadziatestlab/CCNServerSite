@@ -9,13 +9,18 @@ config_host=''
 
 #hccn=ccn.CCN()
 
+class callbackInfo():
+	def __init__(self):
+		self.callback=None
+		self.sdpInfo=None #only for tests of first phase
 
 
 class ccnRegister(threading.Thread):
-	def __init__(self,threadId,callback):
+	def __init__(self,threadId,callback,sdp):
 		threading.Thread.__init__(self)
 		self.threadId=threadId
 		self.callback=callback
+		self.sdp=sdp
 
 	def run(self):
 		print 'ccnRegister thread started !'
@@ -24,15 +29,20 @@ class ccnRegister(threading.Thread):
 		print name
 		handler=ccn.CCN()
 
-		
-		
+
 		interest_handler=ProducerClosure()
+		interest_handler.callback=self.onInterest
+		interest_handler.sdpInfo=self.sdp #only for test first phase
 		res=handler.setInterestFilter(name,interest_handler)
 		if(res<0):
 			print 'Some problems occured !'
 		
 		handler.run(-1)
 		raise SystemError('Exited loop!')
+	def onInterest(self,message):
+		print message
+		self.callback(str(message),None)
+	
 
 class makeCCNCall(threading.Thread):
 	def __init__(self,IdFrom,IdTo,callback):
@@ -140,11 +150,17 @@ class SimpleEcho(WebSocket):
 		
 	def addNewClient(self,data):
 		if(not self.ccnClients.has_key(data['userId'])):
-			newCCNRegisterThread=ccnRegister(data['userId'],None)
+			newCCNRegisterThread=ccnRegister(data['userId'],self.sendRequestToIPClient,data['SDP'])
 			newCCNRegisterThread.start()
 			data['threadRef']=newCCNRegisterThread
 		self.ccnClients[data['userId']]=data
 		self.showNumberOfClients()
+
+	def sendRequestToIPClient(self,name,callback):
+		print 'sendRequestToIPClient called with name: ',
+		print name
+		self.sendMessage('someone is calling you !')
+		
 		
 	def makeCall(self,data):
 		print 'makeCall method called with params:',
@@ -153,11 +169,13 @@ class SimpleEcho(WebSocket):
 
 		ccnCallThread=makeCCNCall(data['From'],data['To'],self.makeCallCallback)
 		ccnCallThread.start()
+		
 
 
 	def makeCallCallback(self):
 		print 'makeCallCallback called'	
-
+		self.sendMessage("asdasdasd")
+		
 	def showNumberOfClients(self):
 		print 'Number of CCN Clients:',
 		print len(self.ccnClients)
@@ -219,7 +237,9 @@ class SimpleEcho(WebSocket):
 
 
 
-class ProducerClosure(ccn.Closure):
+class ProducerClosure(ccn.Closure,callbackInfo):
+	def __init__(self):
+		callbackInfo.__init__(self)
 	def upcall(self,kind,upcallInfo):
 		if(kind==ccn.UPCALL_FINAL):
 			pass
@@ -227,10 +247,15 @@ class ProducerClosure(ccn.Closure):
 			print 'Interest received !!!'
 			name=upcallInfo.Interest.name
 			print 'Received request: '+str(name)
-			payload='Hello Client'
+			#payload='Hello Client'
+			payload=self.sdpInfo
 			co=ccn.ContentObject(name)
 			co.content=payload
 			
+
+			self.callback('Received interest with name')
+			self.callback(str(name))
+
 			handler=ccn.CCN()
 			key=handler.getDefaultKey()
 			kl=ccn.KeyLocator()
