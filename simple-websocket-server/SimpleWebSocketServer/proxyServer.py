@@ -64,6 +64,7 @@ class ccnRegister(threading.Thread):
 		handler.run(-1)
 		raise SystemError('Exited loop!')
 	def onInterest(self,message):
+		print 'threadId: ',self.threadId,' onInterest called'
 		print message
 		self.callback(str(message),None)
 	
@@ -87,6 +88,7 @@ class ccnRegister(threading.Thread):
 		else:
 			print co.name
 			print co.content			
+			callback(self.data['From'],co.content)			
 			#self.callback()
 			#self.errorCallback()
 	
