@@ -20,16 +20,6 @@ def showRegisteredClients():
 		print client,'  :  ',registeredClients[client]['obj'].address
 
 
-
-class callbackRef():
-	def __init__(self,callback):
-		self.callback
-	def showReference(self):
-		print 'Callback reference object: ',
-		print self.callback
-	def getReference(self):
-		return self.callback
-
 class callbackInfo():
 	def __init__(self):
 		self.callback=None
@@ -89,126 +79,12 @@ class ccnRegister(threading.Thread):
 			print co.name
 			print co.content			
 			callback(self.data['From'],co.content)			
-			#self.callback()
-			#self.errorCallback()
-	
-
-
-
-
-
-
-class ccnConnector(threading.Thread):
-	def __init__(self,ipHandler):
-		threading.Thread.__init__(self)
-		self.ccnHandler=None
-		self.ipHandler=ipHandler
-		self.interestHandlers={}
-		print '#ccnConnector created'
-	def run(self):
-		print '#ccnConnector thread started !'
-		self.ccnHandler=ccn.CCN()
-		#self.interestHandler=ProducerClosure()
-		self.ipHandler.sendMessage(unicode('Hello my client!!!'))
-		print 'ipHandler: ',
-		print self.ipHandler
-		print 'sendMessage ref: ',
-		print self.ipHandler.sendMessage
-		self.ccnHandler.run(-1)
-		raise SystemError('Exited loop!')
-	def addClient(self,clientId):
-		print '#addClient called '
-		name=ccn.Name(str(clientId))
-		print '#Registering with name :',
-		print name
-		self.interestHandlers[name]=ProducerClosure()				
-		self.ccnHandler.setInterestFilter(name,self.interestHandlers[name])
-
-		
-
-
-		
-
-
-
-class makeCCNCall(threading.Thread):
-	def __init__(self,IdFrom,IdTo,callback,errorCallback):
-		threading.Thread.__init__(self)
-		self.threadId=IdFrom		
-		self.idFrom=IdFrom
-		self.idTo=IdTo
-		self.callback=callback
-		self.errorCallback=errorCallback
-		print 'makeCCNCall thread initialization'
-	def run(self):
-		print "Sending CCN request to: "+str(self.idTo)
-		urlName=self.idTo+'/call'+self.idFrom
-		print urlName
-		name=ccn.Name(str(urlName))
-		ccnHandler=ccn.CCN()
-		co=ccnHandler.get(name,timeoutms=2000)
-		if(co==None):
-			print 'No answer from server'
-			self.errorCallback()
-		else:
-			print co.name
-			print co.content			
-			#self.callback()
-			self.errorCallback()
-		
 
 			
-class sendToCCN(threading.Thread):
-	def __init__(self,name,callback):
-		threading.Thread.__init__(self)
-		self.name=name
-		self.callback=callback
-	def run(self):
-		hccn=ccn.CCN()
-		nameStr=ccn.Name(self.name)
-		co=hccn.get(nameStr,timeoutms=9000)
-		print nameStr
-		self.callback('Thread finished')
 
 
 
-class addNewClient(threading.Thread):
-	def __init__(self,callback):
-		threading.Thread.__init__(self)
-		self.callback=callback
-		#self.clients=clients
-		print 'addNewClient constructor called'
-	def run(self):
-		#self.clients[data.userId]=data
-		self.callback()
-		pass
-
-
-def onSuccess(event):
-	print 'onSuccess called.'
-
-def onError(message):
-	print 'onError called.'
-
-
-
-
-
-
-
-class SimpleEcho(WebSocket):
-
-	'''
-	################### Utils for tests  ################
-	'''
-
-	'''
-	################### End of utils #################
-	'''	
-
-
-
-		
+class SimpleEcho(WebSocket):		
 	def expressInterest(self,name,onSuccess,onError):
 		print 'expressInterest called for name: '+name
 	
@@ -292,24 +168,9 @@ class SimpleEcho(WebSocket):
 			#if dane:print type(dane)
 			if type(dane)is dict:
 				print dane['type']
-				if dane['type']=='Interest':
-					self.expressInterest(dane['data'],onSuccess,onError)
-					toCCN=sendToCCN(dane['data'],self.callback)
-					toCCN.start()
-
-
+		
 				if dane['type']=='REGISTER':
 					print 'REGISTER METHOD PROCESING'
-					'''					
-					print 'Client socket: ',
-					print self.client
-					print 'Server socket: ',
-					print self
-					dane['socket']=self
-					#self.addNewClient(dane)
-					#self.ccnThreadId.addClient(dane['userId'])	
-					'''
-					
 					print 'message from client: ',dane['userId']
 					
 					showRegisteredClients()
@@ -396,24 +257,6 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 			else:
 				sys.stderr.write(payload+' NOT SENT !')
 		return ccn.RESULT_OK
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
