@@ -59,6 +59,8 @@ class WebSocket(object):
       
       #Some object used by ccn project
       self.ccnClients={}
+      self.ccnThreadId=None
+      self.clienSocket=None
 
       self.server = server
       self.client = sock
@@ -350,6 +352,9 @@ class WebSocket(object):
           If data is a unicode object then the frame is sent as Text.
           If the data is a bytearray object then the frame is sent as Binary. 
       """
+      # only for test by OrangeLabs
+      print "sendMessage method called"
+
       opcode = BINARY
       if isinstance(data, unicode):
          opcode = TEXT
@@ -357,6 +362,11 @@ class WebSocket(object):
    
 
    def _sendMessage(self, fin, opcode, data):
+	# only for test by OrangeLabs
+	print '_sendMessage called with type and data: ',
+	print type(data),
+	print data	
+
         header = bytearray()
         b1 = 0
         b2 = 0
