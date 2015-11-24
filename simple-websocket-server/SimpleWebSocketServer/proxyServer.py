@@ -7,7 +7,18 @@ from SimpleWebSocketServer import WebSocket, SimpleWebSocketServer
 config_port=8000
 config_host=''
 
-#hccn=ccn.CCN()
+clients=[]
+registeredClients={}
+
+def showConnectedClients():
+	print 'Connected clients:'
+	for client in clients:
+		print client.address
+def showRegisteredClients():
+	print 'Registered clients:'
+	for client in registeredClients:
+		print client,'  :  ',registeredClients[client]['obj'].address
+
 
 
 class callbackRef():
@@ -32,6 +43,8 @@ class ccnRegister(threading.Thread):
 		self.threadId=threadId
 		self.callback=callback
 		self.sdp=sdp
+		self.data=None
+		print 'ccnRegister thread constructor called'
 
 	def run(self):
 		print 'ccnRegister thread started !'
@@ -54,6 +67,34 @@ class ccnRegister(threading.Thread):
 		print message
 		self.callback(str(message),None)
 	
+	def onMakeCall(self,data,callback,errorCallback):
+		self.data=data
+		print 'threadId: ',self.threadId,' onMakeCall called'
+		print 'sending request to: ',data['To']
+		
+	
+		
+		urlName=data['To']+'/call'+data['From']
+		print 'Request URL: ',urlName
+		
+		name=ccn.Name(str(urlName))
+		ccnHandler=ccn.CCN()
+		co=ccnHandler.get(name,timeoutms=2000)
+		if(co==None):
+			print 'No answer from server'
+			#self.onMakeCallError()
+			errorCallback(self.data['From'],'No answer from called')
+		else:
+			print co.name
+			print co.content			
+			#self.callback()
+			#self.errorCallback()
+	
+
+
+
+
+
 
 class ccnConnector(threading.Thread):
 	def __init__(self,ipHandler):
@@ -154,6 +195,17 @@ def onError(message):
 
 
 class SimpleEcho(WebSocket):
+
+	'''
+	################### Utils for tests  ################
+	'''
+
+	'''
+	################### End of utils #################
+	'''	
+
+
+
 		
 	def expressInterest(self,name,onSuccess,onError):
 		print 'expressInterest called for name: '+name
@@ -163,16 +215,16 @@ class SimpleEcho(WebSocket):
 		print 'addNewClientCallback called'
 		print len(self.ccnClients)
 		
-	def addNewClient(self,data):
-		'''
-		if(not self.ccnClients.has_key(data['userId'])):
+	def addNewClient(self,data,obj):
+		print 'Client is registered: ',registeredClients.has_key(data['userId'])
+		if not registeredClients.has_key(data['userId']): 
 			newCCNRegisterThread=ccnRegister(data['userId'],self.sendRequestToIPClient,data['SDP'])
 			newCCNRegisterThread.start()
-			data['threadRef']=newCCNRegisterThread
-		self.ccnClients[data['userId']]=data
-		self.showNumberOfClients()
+			info={}
+			info['obj']=obj
+			info['threadRef']=newCCNRegisterThread		
+			registeredClients[data['userId']]=info
 
-		'''
 
 	def sendRequestToIPClient(self,name,callback):
 		print 'sendRequestToIPClient called with name: ',
@@ -190,31 +242,18 @@ class SimpleEcho(WebSocket):
 		print 'makeCall method called with params:',
 		print data['From'],
 		print data['To']
-
-		ccnCallThread=makeCCNCall(data['From'],data['To'],self.makeCallCallback,self.ccnCallErrorCallback)
-		ccnCallThread.start()
-		
-	def ccnCallErrorCallback(self):
-		print '#ccnCallErrorCallback'
-		print 'self.client: '
-		print self.client
-		print 'self.clientSocket.client: ',
-		#print self.clientSocket.client
-		print 'self.clientSocket: ',
-		print self.clientSocket
-		txt='Error ocured !'
-		print 'Type of txt: ',
-		print type(txt)
-		u=unicode(txt)
-		print 'Type of u: ',
-		print type(u)
-		self.clientSocket.sendMessage(u)
+		registeredClients[data['From']]['threadRef'].onMakeCall(data,self.makeCallErrorCallback,self.makeCallErrorCallback)
 
 
 	def makeCallCallback(self):
 		print 'makeCallCallback called'	
 		self.sendMessage("asdasdasd")
-		
+
+	def makeCallErrorCallback(self,calling,message):
+		print 'makeCallErrorCallback called with: ',calling,' , ',message		
+		#registeredClients[calling]['obj'].sendMessage(u+message)
+		registeredClients[calling]['obj'].sendMessage(unicode(message))
+
 	def showNumberOfClients(self):
 		print 'Number of CCN Clients:',
 		print len(self.ccnClients)
@@ -224,23 +263,16 @@ class SimpleEcho(WebSocket):
 		print message
 
 	def handleConnected(self):
-		print 'Peer connected !'
-		print 'Client Socket: ',
-		print self.client
-		print 'Server socket: ',
-		print self
-		#print dir(self.client)
-		print "\n\n\n"
-		#print dir(self)
-		if self.ccnThreadId==None:
-			self.ccnThreadId=ccnConnector(self)
-			self.ccnThreadId.start()
-		self.sendMessage(unicode('Hello my GUEST !!!'))
-		print 'Send message ref: ',
-		print self.sendMessage
+		print 'Peer connected. Address: ',self.address
+		clients.append(self)
+		showConnectedClients()
+		self.sendMessage(u'Hello Client')
+
 
 	def handleClose(self):
-		print 'Peer disconnected'
+		print 'Peer disconnected. Address: ',self.address
+		clients.remove(self)
+		showConnectedClients()
 
 
 
@@ -249,7 +281,8 @@ class SimpleEcho(WebSocket):
 	def handleMessage(self):
 		
 		print 'Received type: '+str(type(self.data))
-		#print dir(self.data)
+
+		
 		if type(self.data) is unicode:
 			print 'Signaling message'
 			print self.data
@@ -265,44 +298,43 @@ class SimpleEcho(WebSocket):
 
 				if dane['type']=='REGISTER':
 					print 'REGISTER METHOD PROCESING'
+					'''					
 					print 'Client socket: ',
 					print self.client
 					print 'Server socket: ',
 					print self
 					dane['socket']=self
 					#self.addNewClient(dane)
-					self.ccnThreadId.addClient(dane['userId'])	
-
+					#self.ccnThreadId.addClient(dane['userId'])	
+					'''
+					
+					print 'message from client: ',dane['userId']
+					
+					showRegisteredClients()
+					self.addNewClient(dane,self)
+					
 
 				if dane['type']=='CALL':
 					print 'CALL CONNECTION '
-					print 'self: ',
-					print self
-					self.clientSocket=self
-					print 'self.clientSocket: ',
-					print self.clientSocket
-					print 'self.client: ',
-					print self.client
+					print 'self: ',self
+					#self.clientSocket=self
+					#print 'self.clientSocket: ',self.clientSocket
+					print 'self.client: ',self.client
 					#self.clientSocket.sendMessage('test')
-					#self.makeCall(dane)
+					self.makeCall(dane)
 
 				if dane['type']=='TEST':
 					print 'Test of connection with peer'
 					ss=json.dumps(dane,ensure_ascii=False)
 					
 					self.sendMessage(ss)
-					print type(self.data)	
-					print type(ss)				
-					print ss	
-					print self.data				
 					print 'Message to client sent.'
 					print 'Server socket: ',
 					print self
 					print 'Client socket: ',
 					print self.client
-					#self.makeCall(dane)
-					#self.ccnCallErrorCallback()
-
+					print 'Client address: ',self.address
+					
 
 		if type(self.data) is bytearray:
 			#values=bytearray(self.data)
@@ -314,7 +346,7 @@ class SimpleEcho(WebSocket):
 			#print 'Length array: '+str(values.length)
 				
 
-
+		
 
 
 
@@ -387,7 +419,7 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 if __name__=="__main__":
 	print 'proxy Server is going to start'
 	
-	server=SimpleWebSocketServer('192.168.0.153',8000,SimpleEcho)
+	server=SimpleWebSocketServer('',8000,SimpleEcho)
 	
 	def close_sig_handler(signal,frame):
 		print 'close port called !'
