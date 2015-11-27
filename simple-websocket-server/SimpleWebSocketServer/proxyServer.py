@@ -24,6 +24,7 @@ class callbackInfo():
 	def __init__(self):
 		self.callback=None
 		self.sdpInfo=None #only for tests of first phase
+		self.nameId=None
 	
 
 
@@ -32,7 +33,9 @@ class ccnRegister(threading.Thread):
 		threading.Thread.__init__(self)
 		self.threadId=threadId
 		self.callback=callback
-		self.sdp=sdp
+		self.sdp={}
+		self.sdp['SDP']=sdp['SDP']
+		self.sdp['ICE']=sdp['ICE']
 		self.data=None
 		print 'ccnRegister thread constructor called'
 
@@ -47,6 +50,7 @@ class ccnRegister(threading.Thread):
 		interest_handler=ProducerClosure()
 		interest_handler.callback=self.onInterest
 		interest_handler.sdpInfo=self.sdp #only for test first phase
+		interest_handler.nameId=name
 		res=handler.setInterestFilter(name,interest_handler)
 		if(res<0):
 			print 'Some problems occured !'
@@ -80,7 +84,12 @@ class ccnRegister(threading.Thread):
 			print co.content			
 			callback(self.data['From'],co.content)			
 
-			
+	def updateSDP(self,sdp):
+		self.sdp['SDP']=sdp['SDP']
+		self.sdp['ICE']=sdp['ICE']
+		if sdp.has_key('ANSWER'):
+			self.sdp['ANSWER']=sdp['ANSWER']
+					
 
 
 
@@ -96,12 +105,15 @@ class SimpleEcho(WebSocket):
 	def addNewClient(self,data,obj):
 		print 'Client is registered: ',registeredClients.has_key(data['userId'])
 		if not registeredClients.has_key(data['userId']): 
-			newCCNRegisterThread=ccnRegister(data['userId'],self.sendRequestToIPClient,data['SDP'])
+			newCCNRegisterThread=ccnRegister(data['userId'],self.sendRequestToIPClient,data)
 			newCCNRegisterThread.start()
 			info={}
 			info['obj']=obj
 			info['threadRef']=newCCNRegisterThread		
 			registeredClients[data['userId']]=info
+		else:
+			print 'Client data update'
+			registeredClients[data['userId']]['threadRef'].updateSDP(data)
 
 
 	def sendRequestToIPClient(self,name,callback):
@@ -220,11 +232,12 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 		if(kind==ccn.UPCALL_FINAL):
 			pass
 		elif(kind==ccn.UPCALL_INTEREST):
+			print 'User: ',self.nameId
 			print 'Interest received !!!'
 			name=upcallInfo.Interest.name
 			print 'Received request: '+str(name)
 			#payload='Hello Client'
-			payload=self.sdpInfo
+			payload=json.dumps(self.sdpInfo,ensure_ascii=False)
 			co=ccn.ContentObject(name)
 			co.content=payload
 			
