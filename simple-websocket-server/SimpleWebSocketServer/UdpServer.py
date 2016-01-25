@@ -1,5 +1,6 @@
 import socket
 import sys
+from CCNBuffer import CCNBuffer
 
 
 class UdpServer():
@@ -27,6 +28,10 @@ class UdpServer():
 		print ' port: ',
 		print self.port
 
+		# buffer for CCN packets
+		buf=CCNBuffer(100)
+		buf.showBufferState()
+
 		while(1):
 			d=self.socket.recvfrom(1024)
 			data=d[0]
@@ -34,6 +39,8 @@ class UdpServer():
 			if not data:
 				break
 			print 'Obtained: '+data+'From: '+str(addr)
+			buf.addPacket(data)
+			buf.showBufferState()
 			reply='OK ... '+data
 			self.socket.sendto(reply,addr)
 			print 'Message sent'
