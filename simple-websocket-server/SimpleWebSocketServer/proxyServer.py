@@ -2,7 +2,7 @@ import signal,sys,json
 import pyccn as ccn
 import threading,time
 from SimpleWebSocketServer import WebSocket, SimpleWebSocketServer
-
+from MediaServer import MediaServer
 
 config_port=8000
 config_host=''
@@ -278,6 +278,9 @@ if __name__=="__main__":
 	print 'proxy Server is going to start'
 	
 	server=SimpleWebSocketServer('',8000,SimpleEcho)
+
+	mediaServer=MediaServer()
+	mediaServer.start()
 	
 	def close_sig_handler(signal,frame):
 		print 'close port called !'
