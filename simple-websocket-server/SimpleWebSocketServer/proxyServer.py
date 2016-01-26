@@ -37,6 +37,7 @@ class ccnRegister(threading.Thread):
 		self.sdp['SDP']=sdp['SDP']
 		self.sdp['ICE']=sdp['ICE']
 		self.data=None
+		self.mediaCounter=0
 		print 'ccnRegister thread constructor called'
 
 	def run(self):
@@ -89,11 +90,33 @@ class ccnRegister(threading.Thread):
 		self.sdp['ICE']=sdp['ICE']
 		if sdp.has_key('ANSWER'):
 			self.sdp['ANSWER']=sdp['ANSWER']
+	
+	def onGetMedia(self,data,callback,errorCallback):
+		self.data=data
+		print 'threadId: ',self.threadId,' onGetMedia called'
+		print 'sending request to: ',data['To']
+		###################################################################		
+		self.mediaCounter+=1		
+		urlName=data['To']+'/call'+data['From']+'/Media/'+str(self.mediaCounter)
+		print 'Request URL: ',urlName
+		name=ccn.Name(str(urlName))
+		ccnHandler=ccn.CCN()
+		co=ccnHandler.get(name,timeoutms=2000)
+		if(co==None):
+			print 'No answer from server'
+			errorCallback(self.data['From'],'No answer from called')
+		else:
+			callback(self.data['From'],co.content)
+
 					
 
+	
 
-
-class SimpleEcho(WebSocket):		
+class SimpleEcho(WebSocket):
+	def attachMediaServer(self,mediaServer):
+		print 'attachMediaServer called'
+		#self.mediaServer=mediaServer
+			
 	def expressInterest(self,name,onSuccess,onError):
 		print 'expressInterest called for name: '+name
 	
@@ -143,6 +166,21 @@ class SimpleEcho(WebSocket):
 		print 'makeCallErrorCallback called with: ',calling,' , ',message		
 		#registeredClients[calling]['obj'].sendMessage(u+message)
 		registeredClients[calling]['obj'].sendMessage(unicode(message))
+
+
+	# retrieving media packets
+	def getMedia(self,data):
+		print 'getMedia called'
+		##############################################################
+		registeredClients[data['From']]['threadRef'].onGetMedia(data,self.getMediaCallback,self.getMediaErrorCallback)
+
+	def getMediaCallback(self,calling,data):
+		print 'getMediaCallback called'
+	def getMediaErrorCallback(self,calling,message):
+		print 'getMediaErrorCallback called with: ',calling,' , ',message
+
+
+
 
 	def showNumberOfClients(self):
 		print 'Number of CCN Clients:',
@@ -209,6 +247,10 @@ class SimpleEcho(WebSocket):
 					print 'Client socket: ',
 					print self.client
 					print 'Client address: ',self.address
+				if dane['type']=='GETMEDIA':
+					print 'GETMEDIA request arrived'
+					self.getMedia(dane)
+
 					
 
 		if type(self.data) is bytearray:
@@ -281,6 +323,13 @@ if __name__=="__main__":
 
 	mediaServer=MediaServer()
 	mediaServer.start()
+	#print dir(server)
+	print 'mediaServer:= ',
+	print mediaServer	
+	server.mediaServer=mediaServer
+	print 'server.mediaServer:= ',
+	print server.mediaServer
+
 	
 	def close_sig_handler(signal,frame):
 		print 'close port called !'

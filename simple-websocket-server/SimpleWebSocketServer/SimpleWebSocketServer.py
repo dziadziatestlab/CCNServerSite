@@ -61,6 +61,7 @@ class WebSocket(object):
       self.ccnClients={}
       self.ccnThreadId=None
       self.clienSocket=None
+      
 
       self.server = server
       self.client = sock
@@ -573,6 +574,7 @@ class SimpleWebSocketServer(object):
       self.selectInterval = selectInterval
       self.connections = {}
       self.listeners = [self.serversocket]
+      self.mediaServer=None	
 
    def _decorateSocket(self, sock):
       return sock
