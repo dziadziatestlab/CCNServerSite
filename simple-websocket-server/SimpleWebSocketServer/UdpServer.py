@@ -8,7 +8,33 @@ class UdpServer():
 		self.host=host
 		self.port=port
 		self.socket=None
+		self.isBinded=False
+		self.ccnBuffer=None
 		print 'UdpServer initialised'
+
+
+	def __bindSocket__(self):
+		port=self.port
+		while(not self.isBinded):
+			try:
+				self.socket.bind((self.host,port))
+				self.port=port
+				self.isBinded=True
+			except socket.error,msg:
+				print 'Socket binding error: '+str(msg[0])+' Message: '+msg[1]
+				if msg[0]==99:
+					print 'Check ip address of interface'
+					sys.exit()
+				if msg[0]==98:
+					print 'Trying to assign next port'
+					port+=1
+					if port-self.port>10:
+						print 'No possibility to find free port!'
+						sys.exit()
+					
+				#sys.exit()
+	
+
 	def start(self):
 		try:
 			self.socket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -16,12 +42,8 @@ class UdpServer():
 		except socket.error:
 			print 'Failed to create socket'
 			sys.exit()
-		try:
-			self.socket.bind((self.host,self.port))
-		except socket.error,msg:
-			print 'Socket binding error: '+str(msg[0])+' Message: '+msg[1]
-			sys.exit()
-
+		
+		self.__bindSocket__()		
 
 		print 'UdpServer started at adress: ',
 		print self.host,
@@ -31,6 +53,7 @@ class UdpServer():
 		# buffer for CCN packets
 		buf=CCNBuffer(100)
 		buf.showBufferState()
+		self.ccnBuffer=buf
 
 		while(1):
 			d=self.socket.recvfrom(1024)

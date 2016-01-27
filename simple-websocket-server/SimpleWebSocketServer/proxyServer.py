@@ -25,11 +25,12 @@ class callbackInfo():
 		self.callback=None
 		self.sdpInfo=None #only for tests of first phase
 		self.nameId=None
+		self.mediaServer=None
 	
 
 
 class ccnRegister(threading.Thread):
-	def __init__(self,threadId,callback,sdp):
+	def __init__(self,threadId,callback,sdp,mediaServer):
 		threading.Thread.__init__(self)
 		self.threadId=threadId
 		self.callback=callback
@@ -38,6 +39,7 @@ class ccnRegister(threading.Thread):
 		self.sdp['ICE']=sdp['ICE']
 		self.data=None
 		self.mediaCounter=0
+		self.mediaServer=mediaServer
 		print 'ccnRegister thread constructor called'
 
 	def run(self):
@@ -52,6 +54,7 @@ class ccnRegister(threading.Thread):
 		interest_handler.callback=self.onInterest
 		interest_handler.sdpInfo=self.sdp #only for test first phase
 		interest_handler.nameId=name
+		interest_handler.mediaServer=self.mediaServer
 		res=handler.setInterestFilter(name,interest_handler)
 		if(res<0):
 			print 'Some problems occured !'
@@ -128,7 +131,7 @@ class SimpleEcho(WebSocket):
 	def addNewClient(self,data,obj):
 		print 'Client is registered: ',registeredClients.has_key(data['userId'])
 		if not registeredClients.has_key(data['userId']): 
-			newCCNRegisterThread=ccnRegister(data['userId'],self.sendRequestToIPClient,data)
+			newCCNRegisterThread=ccnRegister(data['userId'],self.sendRequestToIPClient,data,self.mediaServer)    # !!!!!!!!!!!!!!!!!!
 			newCCNRegisterThread.start()
 			info={}
 			info['obj']=obj
@@ -192,6 +195,13 @@ class SimpleEcho(WebSocket):
 
 	def handleConnected(self):
 		print 'Peer connected. Address: ',self.address
+
+		###########################
+		if hasattr(self,'mediaServer')==False:
+			self.mediaServer=MediaServer()
+			self.mediaServer.start()
+		
+
 		clients.append(self)
 		showConnectedClients()
 		self.sendMessage(u'Hello Client')
@@ -201,6 +211,8 @@ class SimpleEcho(WebSocket):
 		print 'Peer disconnected. Address: ',self.address
 		clients.remove(self)
 		showConnectedClients()
+		if hasattr(self,'mediaServer')==True:
+			self.mediaServer.onStop()
 
 
 
@@ -279,7 +291,21 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 			name=upcallInfo.Interest.name
 			print 'Received request: '+str(name)
 			#payload='Hello Client'
-			payload=json.dumps(self.sdpInfo,ensure_ascii=False)
+
+			###################################################################
+			payload='test hello packet'
+			if('/Media/' in str(name)):
+				print ' /Media/ triger found in name'
+				if hasattr(self,'mediaServer'):
+					print 'OK. MediaServer exists'
+					if hasattr(self.mediaServer.udpServer,'ccnBuffer'):
+						print 'OK. Buffer found !!!'
+						payload=self.mediaServer.udpServer.ccnBuffer.readPacket()
+
+				else:
+					payload='No media server found'
+			else:
+				payload=json.dumps(self.sdpInfo,ensure_ascii=False)
 			co=ccn.ContentObject(name)
 			co.content=payload
 			
@@ -318,17 +344,18 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 
 if __name__=="__main__":
 	print 'proxy Server is going to start'
+
 	
 	server=SimpleWebSocketServer('',8000,SimpleEcho)
 
-	mediaServer=MediaServer()
-	mediaServer.start()
+	#mediaServer=MediaServer()
+	#mediaServer.start()
 	#print dir(server)
-	print 'mediaServer:= ',
-	print mediaServer	
-	server.mediaServer=mediaServer
-	print 'server.mediaServer:= ',
-	print server.mediaServer
+	#print 'mediaServer:= ',
+	#print mediaServer	
+	#server.mediaServer=mediaServer
+	#print 'server.mediaServer:= ',
+	#print server.mediaServer
 
 	
 	def close_sig_handler(signal,frame):
