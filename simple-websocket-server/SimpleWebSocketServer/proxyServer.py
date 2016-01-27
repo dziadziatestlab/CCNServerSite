@@ -98,7 +98,6 @@ class ccnRegister(threading.Thread):
 		self.data=data
 		print 'threadId: ',self.threadId,' onGetMedia called'
 		print 'sending request to: ',data['To']
-		###################################################################		
 		self.mediaCounter+=1		
 		urlName=data['To']+'/call'+data['From']+'/Media/'+str(self.mediaCounter)
 		print 'Request URL: ',urlName
@@ -131,7 +130,7 @@ class SimpleEcho(WebSocket):
 	def addNewClient(self,data,obj):
 		print 'Client is registered: ',registeredClients.has_key(data['userId'])
 		if not registeredClients.has_key(data['userId']): 
-			newCCNRegisterThread=ccnRegister(data['userId'],self.sendRequestToIPClient,data,self.mediaServer)    # !!!!!!!!!!!!!!!!!!
+			newCCNRegisterThread=ccnRegister(data['userId'],self.sendRequestToIPClient,data,self.mediaServer)   
 			newCCNRegisterThread.start()
 			info={}
 			info['obj']=obj
@@ -174,11 +173,17 @@ class SimpleEcho(WebSocket):
 	# retrieving media packets
 	def getMedia(self,data):
 		print 'getMedia called'
-		##############################################################
 		registeredClients[data['From']]['threadRef'].onGetMedia(data,self.getMediaCallback,self.getMediaErrorCallback)
 
 	def getMediaCallback(self,calling,data):
 		print 'getMediaCallback called'
+		host='192.168.0.149'
+		port=8891
+		print 'Data to be send: ',
+		print data
+
+		self.mediaServer.udpServer.socket.sendto(data,(host,port))
+
 	def getMediaErrorCallback(self,calling,message):
 		print 'getMediaErrorCallback called with: ',calling,' , ',message
 
@@ -196,7 +201,6 @@ class SimpleEcho(WebSocket):
 	def handleConnected(self):
 		print 'Peer connected. Address: ',self.address
 
-		###########################
 		if hasattr(self,'mediaServer')==False:
 			self.mediaServer=MediaServer()
 			self.mediaServer.start()
@@ -291,8 +295,6 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 			name=upcallInfo.Interest.name
 			print 'Received request: '+str(name)
 			#payload='Hello Client'
-
-			###################################################################
 			payload='test hello packet'
 			if('/Media/' in str(name)):
 				print ' /Media/ triger found in name'
