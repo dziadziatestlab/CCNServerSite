@@ -136,9 +136,30 @@ class SimpleEcho(WebSocket):
 			info['obj']=obj
 			info['threadRef']=newCCNRegisterThread		
 			registeredClients[data['userId']]=info
+				################################################
+			print 'Generating answer for REGISTER'
+			message={}
+			message['ProxyServer']= self.mediaServer.getSocket()
+			"""			
+			message={'ProxyServer':{
+					'host':self.mediaServer['HOST'],
+					'port':self.mediaServer['PORT']
+									
+
+					}}
+
+			"""
+			print 'Answer to REGISTER request:',
+			print message
+			message=json.dumps(message,ensure_ascii=False)
+			registeredClients[data['userId']]['obj'].sendMessage(unicode(message))
 		else:
 			print 'Client data update'
 			registeredClients[data['userId']]['threadRef'].updateSDP(data)
+
+			
+
+
 
 
 	def sendRequestToIPClient(self,name,callback):

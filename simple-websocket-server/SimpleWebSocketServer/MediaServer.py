@@ -6,7 +6,7 @@ from UdpServer import UdpServer
 class MediaServer(threading.Thread):
 	def __init__(self):
 		threading.Thread.__init__(self)
-		self.HOST='192.168.0.178'
+		self.HOST='192.168.0.114'
 		self.PORT=8888
 		self.udpServer=None
 		print 'MediaServer thread initialised.'
@@ -20,6 +20,9 @@ class MediaServer(threading.Thread):
 	def onStop(self):
 		if self.udpServer:
 			self.udpServer.stop()
+
+	def getSocket(self):
+		return (self.HOST,self.PORT)
 		
 
 
