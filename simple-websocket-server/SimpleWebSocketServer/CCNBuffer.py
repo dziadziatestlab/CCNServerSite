@@ -24,7 +24,7 @@ class CCNBuffer():
     def readPacket(self):
         try:
             data=self._deq_.popleft()
-        except exceptions.IndexError:
+        except IndexError: #exceptions.IndexError:
             print "Buffer empty !!!"
             data=None
         return data
