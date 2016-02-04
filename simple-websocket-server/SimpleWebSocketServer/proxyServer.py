@@ -41,7 +41,7 @@ class ccnRegister(threading.Thread):
 		self.mediaCounter=0
 		self.mediaServer=mediaServer
 		print 'ccnRegister thread constructor called'
-		print 'dir mediaServer: ',dir(self.mediaServer)		
+		#print 'dir mediaServer: ',dir(self.mediaServer)		
 		print 'media server for this thread: ',self.mediaServer.getSocket()
 
 	def run(self):
@@ -118,7 +118,10 @@ class ccnRegister(threading.Thread):
 				message={"TYPE":"GETMEDIA","RESULT":"NODATA"}
 				errorCallback(self.data['From'],message)		
 			else:			
-				callback(self.data['From'],co.content)
+				message={"TYPE":"GETMEDIA","RESULT":"OK",
+					"MEDIACOUNTER":self.mediaCounter
+					}
+				callback(self.data['From'],co.content,message)
 
 					
 
@@ -178,7 +181,7 @@ class SimpleEcho(WebSocket):
 		print 'ccnClients content :'
 		print self.ccnClients['/robert']
 		socket=self.ccnClients['/robert']['socket']
-		print dir(socket)
+		#print dir(socket)
 		socket.sendMessage('Hello client')
 		
 		#self.sendMessage('someone is calling you !')
@@ -209,12 +212,13 @@ class SimpleEcho(WebSocket):
 
 	########################  tutaj poprawic wysylanie do calling -- socket
 		
-	def getMediaCallback(self,calling,data):
+	def getMediaCallback(self,calling,data,message):
 		print 'getMediaCallback called'
 		host='192.168.0.149'
 		port=8891
 		print 'Data to be send: ',
 		print data
+		self.sendMessage(unicode(json.dumps(message,ensure_ascii=False)))
 		
 		# do poprawienia przy wysylaniu
 		#self.mediaServer.udpServer.socket.sendto(data,(host,port))
