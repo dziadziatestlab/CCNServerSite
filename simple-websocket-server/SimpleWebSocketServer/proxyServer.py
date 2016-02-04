@@ -41,6 +41,8 @@ class ccnRegister(threading.Thread):
 		self.mediaCounter=0
 		self.mediaServer=mediaServer
 		print 'ccnRegister thread constructor called'
+		print 'dir mediaServer: ',dir(self.mediaServer)		
+		print 'media server for this thread: ',self.mediaServer.getSocket()
 
 	def run(self):
 		print 'ccnRegister thread started !'

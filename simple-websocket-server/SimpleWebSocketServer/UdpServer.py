@@ -65,8 +65,8 @@ class UdpServer():
 			buf.addPacket(data)
 			buf.showBufferState()
 			reply='OK ... '+data
-			self.socket.sendto(reply,addr)
-			print 'Message sent'
+			#self.socket.sendto(reply,addr)
+			#print 'Message sent'
 
 	
 	def stop(self):
