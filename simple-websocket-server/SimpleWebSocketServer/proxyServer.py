@@ -241,7 +241,6 @@ class SimpleEcho(WebSocket):
 		if hasattr(self,'mediaServer')==False:
 			self.mediaServer=MediaServer()
 			self.mediaServer.start()
-		
 
 		clients.append(self)
 		showConnectedClients()
@@ -262,7 +261,10 @@ class SimpleEcho(WebSocket):
 	def handleMessage(self):
 		
 		print 'Received type: '+str(type(self.data))
-
+		# DEBUG:
+		print 'DEBUG SimpleEcho self: ',self
+		print 'DEBUG: mediaServer ref: ',self.mediaServer
+		print 'DEBUG: mediaServer socket: ',self.mediaServer.getSocket()
 		
 		if type(self.data) is unicode:
 			print 'Signaling message'

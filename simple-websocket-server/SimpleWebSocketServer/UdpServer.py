@@ -76,6 +76,8 @@ class UdpServer():
 		else:
 			print 'No socket to be closed !'	
 
+	def getSocket(self):
+		return (self.host,self.port)
 
 
 
