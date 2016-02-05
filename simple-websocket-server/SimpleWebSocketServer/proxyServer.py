@@ -3,6 +3,8 @@ import pyccn as ccn
 import threading,time
 from SimpleWebSocketServer import WebSocket, SimpleWebSocketServer
 from MediaServer import MediaServer
+from utils import converter
+
 
 config_port=8000
 config_host=''
@@ -40,10 +42,24 @@ class ccnRegister(threading.Thread):
 		self.data=None
 		self.mediaCounter=0
 		self.mediaServer=mediaServer
+		self.isPeerSet=False
 		print 'ccnRegister thread constructor called'
 		#print 'dir mediaServer: ',dir(self.mediaServer)		
 		print 'media server for this thread: ',self.mediaServer.getSocket()
+		self.__setPeer__()
 
+	def __setPeer__(self):
+		print '__setPeer__ called', self.isPeerSet, len(self.sdp['ICE'])
+
+		
+		if not self.isPeerSet:
+			if len(self.sdp['ICE'])>0:	
+				print self.sdp['ICE'][0]['candidate']
+				self.mediaServer.setPeerAddress(converter.ice_offer_parser(self.sdp['ICE'][0]['candidate']))
+				print 'PeerAddress after setting: ',self.mediaServer.peerSocket;		
+				self.isPeerSet=True
+		
+		
 	def run(self):
 		print 'ccnRegister thread started !'
 		name=ccn.Name(str(self.threadId))
@@ -87,12 +103,14 @@ class ccnRegister(threading.Thread):
 			errorCallback(self.data['From'],'No answer from called')
 		else:
 			print co.name
-			print co.content			
+			#print co.content
+			#message=json.dumps(co.content,ensure_ascii=False)			
 			callback(self.data['From'],co.content)			
 
 	def updateSDP(self,sdp):
 		self.sdp['SDP']=sdp['SDP']
 		self.sdp['ICE']=sdp['ICE']
+		self.__setPeer__()
 		if sdp.has_key('ANSWER'):
 			self.sdp['ANSWER']=sdp['ANSWER']
 	
@@ -118,9 +136,13 @@ class ccnRegister(threading.Thread):
 				message={"TYPE":"GETMEDIA","RESULT":"NODATA"}
 				errorCallback(self.data['From'],message)		
 			else:			
+				###########################################
+				
+				#self.mediaServer.udpServer.getServer().sendto(co.content,addr????)				
 				message={"TYPE":"GETMEDIA","RESULT":"OK",
 					"MEDIACOUNTER":self.mediaCounter
 					}
+				self.mediaServer.sendData(co.content)
 				callback(self.data['From'],co.content,message)
 
 					
@@ -191,17 +213,20 @@ class SimpleEcho(WebSocket):
 		print 'makeCall method called with params:',
 		print data['From'],
 		print data['To']
-		registeredClients[data['From']]['threadRef'].onMakeCall(data,self.makeCallErrorCallback,self.makeCallErrorCallback)
+		registeredClients[data['From']]['threadRef'].onMakeCall(data,self.makeCallCallback,self.makeCallErrorCallback)
 
 
-	def makeCallCallback(self):
-		print 'makeCallCallback called'	
-		self.sendMessage("asdasdasd")
+	def makeCallCallback(self,calling,message):
+		print 'makeCallCallback called with message: ',message	
+		#self.sendMessage("asdasdasd")
+		registeredClients[calling]['obj'].sendMessage(unicode(message))		
 
 	def makeCallErrorCallback(self,calling,message):
 		print 'makeCallErrorCallback called with: ',calling,' , ',message		
 		#registeredClients[calling]['obj'].sendMessage(u+message)
-		registeredClients[calling]['obj'].sendMessage(unicode(message))
+		
+		# !!!!!!!!!!!!!!!!!!!!		
+		#registeredClients[calling]['obj'].sendMessage(unicode(message))
 
 
 	# retrieving media packets
@@ -217,7 +242,7 @@ class SimpleEcho(WebSocket):
 		host='192.168.0.149'
 		port=8891
 		print 'Data to be send: ',
-		print data
+		#print data
 		self.sendMessage(unicode(json.dumps(message,ensure_ascii=False)))
 		
 		# do poprawienia przy wysylaniu

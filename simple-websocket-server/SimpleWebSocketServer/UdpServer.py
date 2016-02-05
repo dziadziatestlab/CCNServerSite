@@ -9,6 +9,7 @@ class UdpServer():
 		self.port=port
 		self.socket=None
 		self.isBinded=False
+		self.peerSet=False
 		self.ccnBuffer=None
 		print 'UdpServer initialised'
 
@@ -59,12 +60,15 @@ class UdpServer():
 			d=self.socket.recvfrom(1024)
 			data=d[0]
 			addr=d[1]
+			if self.peerSet==False:
+				self.peerSocket=addr
+				self.peerSet=True				
 			if not data:
 				break
-			print 'Obtained: '+data+'From: '+str(addr)
+			print 'Obtained data from: '+str(addr)
 			buf.addPacket(data)
-			buf.showBufferState()
-			reply='OK ... '+data
+			#buf.showBufferState()
+			#reply='OK ... '+data
 			#self.socket.sendto(reply,addr)
 			#print 'Message sent'
 
@@ -79,6 +83,12 @@ class UdpServer():
 	def getSocket(self):
 		return (self.host,self.port)
 
+	def getPeerSocket(self):
+		return self.peerSocket
+
+	def sendData(self,data,socket):
+		print 'sendData called with peer: ',socket
+		self.socket.sendto(data,socket)
 
 
 if __name__=='__main__':

@@ -35,5 +35,5 @@ class CCNBuffer():
         print "Buffer Load: ",self._bufferLoad_
         if self._bufferLoad_>=self._size_:
             print "Buffer is FULL"
-        print self._deq_
+        #print self._deq_
         
