@@ -1,18 +1,19 @@
 import threading
 from UdpServer import UdpServer
 from utils.converter import ice_offer_parser
-
+from utils.usocket import get_ip_address
 
 class MediaServer(threading.Thread):
 	def __init__(self):
 		threading.Thread.__init__(self)
-		self.HOST='192.168.0.174'
+		self.HOST=''
 		self.PORT=8888
 		self.udpServer=None
 		self.peerSocket=None #(ipaddress,port)
 		print 'MediaServer thread initialised.'
 
 	def run(self):
+		self.HOST=get_ip_address()
 		print 'MediaServer thread starting'
 		self.udpServer=UdpServer(self.HOST,self.PORT)
 		self.udpServer.start()
