@@ -43,28 +43,28 @@ class ccnRegister(threading.Thread):
 		self.mediaCounter=0
 		self.mediaServer=mediaServer
 		self.isPeerSet=False
-		print 'ccnRegister thread constructor called'
-		#print 'dir mediaServer: ',dir(self.mediaServer)		
-		print 'media server for this thread: ',self.mediaServer.getSocket()
+		# print 'ccnRegister thread constructor called'
+		## print 'dir mediaServer: ',dir(self.mediaServer)		
+		# print 'media server for this thread: ',self.mediaServer.getSocket()
 		self.__setPeer__()
 
 	def __setPeer__(self):
-		print '__setPeer__ called', self.isPeerSet, len(self.sdp['ICE'])
+		# print '__setPeer__ called', self.isPeerSet, len(self.sdp['ICE'])
 
 		
 		if not self.isPeerSet:
 			if len(self.sdp['ICE'])>0:	
-				print self.sdp['ICE'][0]['candidate']
+				# print self.sdp['ICE'][0]['candidate']
 				self.mediaServer.setPeerAddress(converter.ice_offer_parser(self.sdp['ICE'][0]['candidate']))
-				print 'PeerAddress after setting: ',self.mediaServer.peerSocket;		
+				# print 'PeerAddress after setting: ',self.mediaServer.peerSocket;		
 				self.isPeerSet=True
 		
 		
 	def run(self):
-		print 'ccnRegister thread started !'
+		# print 'ccnRegister thread started !'
 		name=ccn.Name(str(self.threadId))
-		print 'Name:',
-		print name
+		# print 'Name:',
+		# print name
 		handler=ccn.CCN()
 
 
@@ -80,30 +80,30 @@ class ccnRegister(threading.Thread):
 		handler.run(-1)
 		raise SystemError('Exited loop!')
 	def onInterest(self,message):
-		print 'threadId: ',self.threadId,' onInterest called'
-		print message
+		# print 'threadId: ',self.threadId,' onInterest called'
+		# print message
 		self.callback(str(message),None)
 	
 	def onMakeCall(self,data,callback,errorCallback):
 		self.data=data
-		print 'threadId: ',self.threadId,' onMakeCall called'
-		print 'sending request to: ',data['To']
+		# print 'threadId: ',self.threadId,' onMakeCall called'
+		# print 'sending request to: ',data['To']
 		
 	
 		
 		urlName=data['To']+'/call'+data['From']
-		print 'Request URL: ',urlName
+		# print 'Request URL: ',urlName
 		
 		name=ccn.Name(str(urlName))
 		ccnHandler=ccn.CCN()
 		co=ccnHandler.get(name,timeoutms=100)
 		if(co==None):
-			print 'No answer from server'
+			# print 'No answer from server'
 			#self.onMakeCallError()
 			errorCallback(self.data['From'],'No answer from called')
 		else:
-			print co.name
-			#print co.content
+			# print co.name
+			## print co.content
 			#message=json.dumps(co.content,ensure_ascii=False)			
 			callback(self.data['From'],co.content)			
 
@@ -116,23 +116,23 @@ class ccnRegister(threading.Thread):
 	
 	def onGetMedia(self,data,callback,errorCallback):
 		self.data=data
-		print 'threadId: ',self.threadId,' onGetMedia called'
-		print 'sending request to: ',data['To']
+		# print 'threadId: ',self.threadId,' onGetMedia called'
+		# print 'sending request to: ',data['To']
 		self.mediaCounter+=1		
 		urlName=data['To']+'/call'+data['From']+'/Media/'+str(self.mediaCounter)
-		print 'Request URL: ',urlName
+		# print 'Request URL: ',urlName
 		name=ccn.Name(str(urlName))
 		ccnHandler=ccn.CCN()
 		co=ccnHandler.get(name,timeoutms=100)
 		if(co==None):
-			print 'No answer from server'
+			# print 'No answer from server'
 			message={"TYPE":"GETMEDIA","RESULT":"NOUSER"}
 			
 			errorCallback(self.data['From'],message)
 		else:
 			
 			if co.content=='':
-				print 'BUFFER EMPTY'
+				# print 'BUFFER EMPTY'
 				message={"TYPE":"GETMEDIA","RESULT":"NODATA"}
 				errorCallback(self.data['From'],message)		
 			else:			
@@ -172,7 +172,7 @@ class SimpleEcho(WebSocket):
 			info['threadRef']=newCCNRegisterThread		
 			registeredClients[data['userId']]=info
 				################################################
-			print 'Generating answer for REGISTER'
+			# print 'Generating answer for REGISTER'
 			message={}
 			message['ProxyServer']= self.mediaServer.getSocket()
 			"""			
@@ -184,12 +184,12 @@ class SimpleEcho(WebSocket):
 					}}
 
 			"""
-			print 'Answer to REGISTER request:',
-			print message
+			# print 'Answer to REGISTER request:',
+			# print message
 			message=json.dumps(message,ensure_ascii=False)
 			registeredClients[data['userId']]['obj'].sendMessage(unicode(message))
 		else:
-			print 'Client data update'
+			# print 'Client data update'
 			registeredClients[data['userId']]['threadRef'].updateSDP(data)
 
 			
@@ -198,31 +198,32 @@ class SimpleEcho(WebSocket):
 
 
 	def sendRequestToIPClient(self,name,callback):
-		print 'sendRequestToIPClient called with name: ',
-		print name
-		print 'ccnClients content :'
-		print self.ccnClients['/robert']
+		# print 'sendRequestToIPClient called with name: ',
+		# print name
+		# print 'ccnClients content :'
+		# print self.ccnClients['/robert']
 		socket=self.ccnClients['/robert']['socket']
-		#print dir(socket)
+		## print dir(socket)
 		socket.sendMessage('Hello client')
 		
 		#self.sendMessage('someone is calling you !')
 		
 		
 	def makeCall(self,data):
-		print 'makeCall method called with params:',
-		print data['From'],
-		print data['To']
+		# print 'makeCall method called with params:',
+		# print data['From'],
+		# print data['To']
 		registeredClients[data['From']]['threadRef'].onMakeCall(data,self.makeCallCallback,self.makeCallErrorCallback)
 
 
 	def makeCallCallback(self,calling,message):
-		print 'makeCallCallback called with message: ',message	
+		# print 'makeCallCallback called with message: ',message	
 		#self.sendMessage("asdasdasd")
 		registeredClients[calling]['obj'].sendMessage(unicode(message))		
 
 	def makeCallErrorCallback(self,calling,message):
-		print 'makeCallErrorCallback called with: ',calling,' , ',message		
+		pass
+		# print 'makeCallErrorCallback called with: ',calling,' , ',message		
 		#registeredClients[calling]['obj'].sendMessage(u+message)
 		
 		# !!!!!!!!!!!!!!!!!!!!		
@@ -231,18 +232,18 @@ class SimpleEcho(WebSocket):
 
 	# retrieving media packets
 	def getMedia(self,data):
-		print 'getMedia called'
+		# print 'getMedia called'
 		registeredClients[data['From']]['threadRef'].onGetMedia(data,self.getMediaCallback,self.getMediaErrorCallback)
 
 
 	########################  tutaj poprawic wysylanie do calling -- socket
 		
 	def getMediaCallback(self,calling,data,message):
-		print 'getMediaCallback called'
+		# print 'getMediaCallback called'
 		host='192.168.0.149'
 		port=8891
-		print 'Data to be send: ',
-		#print data
+		# print 'Data to be send: ',
+		## print data
 		self.sendMessage(unicode(json.dumps(message,ensure_ascii=False)))
 		
 		# do poprawienia przy wysylaniu
@@ -250,22 +251,24 @@ class SimpleEcho(WebSocket):
 
 	def getMediaErrorCallback(self,calling,message):
 		answerMessage=json.dumps(message,ensure_ascii=False)
-		print 'getMediaErrorCallback called with: ',calling,' , ',message
+		# print 'getMediaErrorCallback called with: ',calling,' , ',message
 		self.sendMessage(unicode(answerMessage))
 
 
 
 
 	def showNumberOfClients(self):
-		print 'Number of CCN Clients:',
-		print len(self.ccnClients)
+		# print 'Number of CCN Clients:',
+		# print len(self.ccnClients)
+		pass
 
 
 	def callback(self,message):
-		print message
+		pass
+		# print message
 
 	def handleConnected(self):
-		print 'Peer connected. Address: ',self.address
+		# print 'Peer connected. Address: ',self.address
 
 		if hasattr(self,'mediaServer')==False:
 			self.mediaServer=MediaServer()
@@ -277,7 +280,7 @@ class SimpleEcho(WebSocket):
 
 
 	def handleClose(self):
-		print 'Peer disconnected. Address: ',self.address
+		# print 'Peer disconnected. Address: ',self.address
 		clients.remove(self)
 		showConnectedClients()
 		if hasattr(self,'mediaServer')==True:
@@ -289,60 +292,61 @@ class SimpleEcho(WebSocket):
 
 	def handleMessage(self):
 		
-		print 'Received type: '+str(type(self.data))
+		# print 'Received type: '+str(type(self.data))
 		# DEBUG:
-		print 'DEBUG SimpleEcho self: ',self
-		print 'DEBUG: mediaServer ref: ',self.mediaServer
-		print 'DEBUG: mediaServer socket: ',self.mediaServer.getSocket()
+		# print 'DEBUG SimpleEcho self: ',self
+		# print 'DEBUG: mediaServer ref: ',self.mediaServer
+		# print 'DEBUG: mediaServer socket: ',self.mediaServer.getSocket()
 		
 		if type(self.data) is unicode:
-			print 'Signaling message'
-			print self.data
+			# print 'Signaling message'
+			# print self.data
 			dane=json.loads(self.data)
 			#if dane:print type(dane)
 			if type(dane)is dict:
-				print dane['type']
+				# print dane['type']
 		
 				if dane['type']=='REGISTER':
-					print 'REGISTER METHOD PROCESING'
-					print 'message from client: ',dane['userId']
+					# print 'REGISTER METHOD PROCESING'
+					# print 'message from client: ',dane['userId']
 					
 					showRegisteredClients()
 					self.addNewClient(dane,self)
 					
 
 				if dane['type']=='CALL':
-					print 'CALL CONNECTION '
-					print 'self: ',self
+					# print 'CALL CONNECTION '
+					# print 'self: ',self
 					#self.clientSocket=self
-					#print 'self.clientSocket: ',self.clientSocket
-					print 'self.client: ',self.client
+					## print 'self.clientSocket: ',self.clientSocket
+					# print 'self.client: ',self.client
 					#self.clientSocket.sendMessage('test')
 					self.makeCall(dane)
 
 				if dane['type']=='TEST':
-					print 'Test of connection with peer'
+					# print 'Test of connection with peer'
 					ss=json.dumps(dane,ensure_ascii=False)
 					
 					self.sendMessage(ss)
-					print 'Message to client sent.'
-					print 'Server socket: ',
-					print self
-					print 'Client socket: ',
-					print self.client
-					print 'Client address: ',self.address
+					# print 'Message to client sent.'
+					# print 'Server socket: ',
+					# print self
+					# print 'Client socket: ',
+					# print self.client
+					# print 'Client address: ',self.address
 				if dane['type']=='GETMEDIA':
-					print 'GETMEDIA request arrived'
+					# print 'GETMEDIA request arrived'
 					self.getMedia(dane)
 
 					
 
 		if type(self.data) is bytearray:
 			#values=bytearray(self.data)
-			print 'Inside loop'
-			print self.data.__sizeof__()
+			# print 'Inside loop'
+			# print self.data.__sizeof__()
 			for v in self.data:
-				print v
+				pass
+				# print v
 			#print dir(values)
 			#print 'Length array: '+str(values.length)
 				
@@ -358,18 +362,18 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 		if(kind==ccn.UPCALL_FINAL):
 			pass
 		elif(kind==ccn.UPCALL_INTEREST):
-			print 'User: ',self.nameId
-			print 'Interest received !!!'
+			# print 'User: ',self.nameId
+			# print 'Interest received !!!'
 			name=upcallInfo.Interest.name
-			print 'Received request: '+str(name)
+			# print 'Received request: '+str(name)
 			#payload='Hello Client'
 			payload='test hello packet'
 			if('/Media/' in str(name)):
-				print ' /Media/ triger found in name'
+				# print ' /Media/ triger found in name'
 				if hasattr(self,'mediaServer'):
-					print 'OK. MediaServer exists'
+					# print 'OK. MediaServer exists'
 					if hasattr(self.mediaServer.udpServer,'ccnBuffer'):
-						print 'OK. Buffer found !!!'
+						# print 'OK. Buffer found !!!'
 						payload=self.mediaServer.udpServer.ccnBuffer.readPacket()
 
 				else:
@@ -401,7 +405,7 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 			if(co.matchesInterest(upcallInfo.Interest)):
 				res=handler.put(co)
 				if(res>=0):
-					print payload
+					# print payload
 					return ccn.RESULT_INTEREST_CONSUMED
 				else:
 					raise SystemError('Failed to put ContentObject')

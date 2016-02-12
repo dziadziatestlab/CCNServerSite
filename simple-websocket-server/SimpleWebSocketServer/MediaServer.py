@@ -30,7 +30,7 @@ class MediaServer(threading.Thread):
 		self.peerSocket=socket
 
 	def sendData(self,data):
-		print 'MediaServer sendData called'
+		# print 'MediaServer sendData called'
 		self.udpServer.sendData(data,self.peerSocket)
 
 

@@ -25,15 +25,17 @@ class CCNBuffer():
         try:
             data=self._deq_.popleft()
         except IndexError: #exceptions.IndexError:
-            print "Buffer empty !!!"
+            # print "Buffer empty !!!"
             data=None
         return data
 
     def showBufferState(self):
-        print"----------------"
-        print "Size:  ",self._size_
-        print "Buffer Load: ",self._bufferLoad_
+		pass
+        # print"----------------"
+        # print "Size:  ",self._size_
+        # print "Buffer Load: ",self._bufferLoad_
         if self._bufferLoad_>=self._size_:
-            print "Buffer is FULL"
+            pass
+			# print "Buffer is FULL"
         #print self._deq_
         

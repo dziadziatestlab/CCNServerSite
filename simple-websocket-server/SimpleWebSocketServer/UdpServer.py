@@ -65,7 +65,7 @@ class UdpServer():
 				self.peerSet=True				
 			if not data:
 				break
-			print 'Obtained data from: '+str(addr)
+			# print 'Obtained data from: '+str(addr)
 			buf.addPacket(data)
 			#buf.showBufferState()
 			#reply='OK ... '+data
@@ -87,7 +87,7 @@ class UdpServer():
 		return self.peerSocket
 
 	def sendData(self,data,socket):
-		print 'sendData called with peer: ',socket
+		# print 'sendData called with peer: ',socket
 		self.socket.sendto(data,socket)
 
 
