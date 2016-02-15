@@ -30,7 +30,7 @@ class CCNBuffer():
         return data
 
     def showBufferState(self):
-		pass
+	pass
         # print"----------------"
         # print "Size:  ",self._size_
         # print "Buffer Load: ",self._bufferLoad_
