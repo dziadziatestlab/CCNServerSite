@@ -142,7 +142,7 @@ class ccnRegister(threading.Thread):
 				message={"TYPE":"GETMEDIA","RESULT":"OK",
 					"MEDIACOUNTER":self.mediaCounter
 					}
-				self.mediaServer.sendData(co.content)
+				self.mediaServer.input_queue.put(co.content)
 				callback(self.data['From'],co.content,message)
 
 					
@@ -291,9 +291,9 @@ class SimpleEcho(WebSocket):
 		
 		print 'Received type: '+str(type(self.data))
 		# DEBUG:
-		print 'DEBUG SimpleEcho self: ',self
-		print 'DEBUG: mediaServer ref: ',self.mediaServer
-		print 'DEBUG: mediaServer socket: ',self.mediaServer.getSocket()
+		#print 'DEBUG SimpleEcho self: ',self
+		#print 'DEBUG: mediaServer ref: ',self.mediaServer
+		#print 'DEBUG: mediaServer socket: ',self.mediaServer.getSocket()
 		
 		if type(self.data) is unicode:
 			print 'Signaling message'
@@ -368,9 +368,11 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 				print ' /Media/ triger found in name'
 				if hasattr(self,'mediaServer'):
 					print 'OK. MediaServer exists'
+					payload=self.mediaServer.buffer.readPacket()
+
 					if hasattr(self.mediaServer.udpServer,'ccnBuffer'):
 						print 'OK. Buffer found !!!'
-						payload=self.mediaServer.udpServer.ccnBuffer.readPacket()
+						payload=self.mediaServer.buffer.readPacket()
 
 				else:
 					payload='No media server found'

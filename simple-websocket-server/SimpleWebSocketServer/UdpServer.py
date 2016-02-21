@@ -1,16 +1,20 @@
 import socket
 import sys
-from CCNBuffer import CCNBuffer
+#from CCNBuffer import CCNBuffer
+import Queue
+import threading
 
-
-class UdpServer():
-	def __init__(self,host,port):
+class UdpServer(threading.Thread):
+	def __init__(self,host,port,input_queue,output_queue):
+		threading.Thread.__init__(self,name='UdpServer-thread')
 		self.host=host
 		self.port=port
 		self.socket=None
 		self.isBinded=False
 		self.peerSet=False
-		self.ccnBuffer=None
+		self.input_queue=input_queue
+		self.output_queue=output_queue
+		#self.ccnBuffer=None
 		print 'UdpServer initialised'
 
 
@@ -34,9 +38,11 @@ class UdpServer():
 						sys.exit()
 					
 				#sys.exit()
-	
+	def run(self):
+		print 'UdpServer thread starting'
+		self._start_()
 
-	def start(self):
+	def _start_(self):
 		try:
 			self.socket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 			print 'Socket created'
@@ -52,9 +58,9 @@ class UdpServer():
 		print self.port
 
 		# buffer for CCN packets
-		buf=CCNBuffer(100)
-		buf.showBufferState()
-		self.ccnBuffer=buf
+		#buf=CCNBuffer(100)
+		#buf.showBufferState()
+		#self.ccnBuffer=buf
 
 		while(1):
 			d=self.socket.recvfrom(1024)
@@ -63,14 +69,22 @@ class UdpServer():
 			if self.peerSet==False:
 				self.peerSocket=addr
 				self.peerSet=True				
-			if not data:
-				break
+			if not data: 
+				print 'No data received '
+				#break
 			print 'Obtained data from: '+str(addr)
-			buf.addPacket(data)
+			#buf.addPacket(data)
 			#buf.showBufferState()
 			#reply='OK ... '+data
 			#self.socket.sendto(reply,addr)
 			#print 'Message sent'
+			if data:
+				self.output_queue.put(data)
+			if not self.input_queue.empty():
+				data_to_send=self.input_queue.get()
+				self.sendData(data_to_send,self.getSocket())
+
+			else: print 'Input queue empty !'
 
 	
 	def stop(self):
@@ -93,7 +107,7 @@ class UdpServer():
 
 if __name__=='__main__':
 	print 'UdpServer started from __main__'
-	us=UdpServer('192.168.0.116',8888)
+	us=UdpServer('10.0.2.15',8888,Queue.Queue(),Queue.Queue())
 	us.start()
 	us.stop()
 	sys.exit()
