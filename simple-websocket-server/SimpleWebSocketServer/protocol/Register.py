@@ -1,7 +1,10 @@
 import pyccn as ccn
 import threading,time
-from utils import converter
+from utils import converter,logger
 from protocol.Producer import ProducerClosure
+
+
+LOGGER=logger.Logger().get_logger()
 
 class ccnRegister(threading.Thread):
 	def __init__(self,threadId,callback,sdp,mediaServer):
@@ -15,28 +18,27 @@ class ccnRegister(threading.Thread):
 		self.mediaCounter=0
 		self.mediaServer=mediaServer
 		self.isPeerSet=False
-		print 'ccnRegister thread constructor called'
-		#print 'dir mediaServer: ',dir(self.mediaServer)		
-		print 'media server for this thread: ',self.mediaServer.getSocket()
+		LOGGER( 'ccnRegister thread constructor called')
+		#LOGGER( 'dir mediaServer: ',dir(self.mediaServer))		
+		LOGGER( 'media server for this thread: ',self.mediaServer.getSocket())
 		self.__setPeer__()
 
 	def __setPeer__(self):
-		print '__setPeer__ called', self.isPeerSet, len(self.sdp['ICE'])
+		LOGGER( '__setPeer__ called', self.isPeerSet, len(self.sdp['ICE']))
 
 		
 		if not self.isPeerSet:
 			if len(self.sdp['ICE'])>0:	
-				print self.sdp['ICE'][0]['candidate']
+				LOGGER( self.sdp['ICE'][0]['candidate'])
 				self.mediaServer.setPeerAddress(converter.ice_offer_parser(self.sdp['ICE'][0]['candidate']))
-				print 'PeerAddress after setting: ',self.mediaServer.peerSocket;		
+				LOGGER( 'PeerAddress after setting: ',self.mediaServer.peerSocket)		
 				self.isPeerSet=True
 		
 		
 	def run(self):
-		print 'ccnRegister thread started !'
+		LOGGER( 'ccnRegister thread started !')
 		name=ccn.Name(str(self.threadId))
-		print 'Name:',
-		print name
+		LOGGER( 'Name:',name)
 		handler=ccn.CCN()
 
 
@@ -47,33 +49,33 @@ class ccnRegister(threading.Thread):
 		interest_handler.mediaServer=self.mediaServer
 		res=handler.setInterestFilter(name,interest_handler)
 		if(res<0):
-			print 'Some problems occured !'
+			LOGGER( 'Some problems occured !')
 		
 		handler.run(-1)
 		raise SystemError('Exited loop!')
 	def onInterest(self,message):
-		print 'threadId: ',self.threadId,' onInterest called'
-		print message
+		LOGGER( 'threadId: ',self.threadId,' onInterest called')
+		LOGGER( message)
 		self.callback(str(message),None)
 	
 	def onMakeCall(self,data,callback,errorCallback):
 		self.data=data
-		print 'threadId: ',self.threadId,' onMakeCall called'
-		print 'sending request to: ',data['To']
+		LOGGER( 'threadId: ',self.threadId,' onMakeCall called')
+		LOGGER( 'sending request to: ',data['To'])
 		
 	
 		
 		urlName=data['To']+'/call'+data['From']
-		print 'Request URL: ',urlName
+		LOGGER( 'Request URL: ',urlName)
 		
 		name=ccn.Name(str(urlName))
 		ccnHandler=ccn.CCN()
 		co=ccnHandler.get(name,timeoutms=100)
 		if(co==None):
-			print 'No answer from server'
+			LOGGER( 'No answer from server')
 			errorCallback(self.data['From'],'No answer from called')
 		else:
-			print co.name
+			LOGGER( co.name)
 			callback(self.data['From'],co.content)			
 
 	def updateSDP(self,sdp):
@@ -85,23 +87,23 @@ class ccnRegister(threading.Thread):
 	
 	def onGetMedia(self,data,callback,errorCallback):
 		self.data=data
-		print 'threadId: ',self.threadId,' onGetMedia called'
-		print 'sending request to: ',data['To']
+		LOGGER( 'threadId: ',self.threadId,' onGetMedia called')
+		LOGGER( 'sending request to: ',data['To'])
 		self.mediaCounter+=1		
 		urlName=data['To']+'/call'+data['From']+'/Media/'+str(self.mediaCounter)
-		print 'Request URL: ',urlName
+		LOGGER( 'Request URL: ',urlName)
 		name=ccn.Name(str(urlName))
 		ccnHandler=ccn.CCN()
 		co=ccnHandler.get(name,timeoutms=100)
 		if(co==None):
-			print 'No answer from server'
+			LOGGER( 'No answer from server')
 			message={"TYPE":"GETMEDIA","RESULT":"NOUSER"}
 			
 			errorCallback(self.data['From'],message)
 		else:
 			
 			if co.content=='':
-				print 'BUFFER EMPTY'
+				LOGGER( 'BUFFER EMPTY')
 				message={"TYPE":"GETMEDIA","RESULT":"NODATA"}
 				errorCallback(self.data['From'],message)		
 			else:			

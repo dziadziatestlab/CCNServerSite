@@ -2,8 +2,12 @@
     buffer for CCN packets
 
 '''
-
+from utils import logger
 from collections import deque
+
+
+LOGGER=logger.Logger().get_logger()
+
 
 class CCNBuffer():
     def __init__(self,size):
@@ -25,15 +29,15 @@ class CCNBuffer():
         try:
             data=self._deq_.popleft()
         except IndexError: #exceptions.IndexError:
-            print "Buffer empty !!!"
+            LOGGER( "Buffer empty !!!")
             data=None
         return data
 
     def showBufferState(self):
-        print"----------------"
-        print "Size:  ",self._size_
-        print "Buffer Load: ",self._bufferLoad_
+        LOGGER("----------------")
+        LOGGER( "Size:  ",self._size_)
+        LOGGER( "Buffer Load: ",self._bufferLoad_)
         if self._bufferLoad_>=self._size_:
-            print "Buffer is FULL"
-        #print self._deq_
+            LOGGER( "Buffer is FULL")
+        #LOGGER( self._deq_)
         

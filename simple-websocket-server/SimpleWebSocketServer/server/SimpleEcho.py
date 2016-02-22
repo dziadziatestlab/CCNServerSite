@@ -2,19 +2,22 @@ import json
 from SimpleWebSocketServer import WebSocket
 from server.MediaServer import MediaServer
 from protocol.Register import ccnRegister
+from utils import logger
+
+LOGGER=logger.Logger().get_logger()
 
 clients=[]
 registeredClients={}
 
 def showConnectedClients():
-	print 'Connected clients:'
+	LOGGER( 'Connected clients:')
 	for client in clients:
-		print client.address
+		LOGGER( client.address)
 
 def showRegisteredClients():
-	print 'Registered clients:'
+	LOGGER( 'Registered clients:')
 	for client in registeredClients:
-		print client,'  :  ',registeredClients[client]['obj'].address
+		LOGGER( client,'  :  ',registeredClients[client]['obj'].address)
 
 
 
@@ -22,19 +25,19 @@ def showRegisteredClients():
 
 class SimpleEcho(WebSocket):
 	def attachMediaServer(self,mediaServer):
-		print 'attachMediaServer called'
+		LOGGER( 'attachMediaServer called')
 		#self.mediaServer=mediaServer
 			
 	def expressInterest(self,name,onSuccess,onError):
-		print 'expressInterest called for name: '+name
+		LOGGER( 'expressInterest called for name: '+name)
 	
 
 	def addNewClientCallback(self):
-		print 'addNewClientCallback called'
-		print len(self.ccnClients)
+		LOGGER( 'addNewClientCallback called')
+		LOGGER( len(self.ccnClients))
 		
 	def addNewClient(self,data,obj):
-		print 'Client is registered: ',registeredClients.has_key(data['userId'])
+		LOGGER( 'Client is registered: ',registeredClients.has_key(data['userId']))
 		if not registeredClients.has_key(data['userId']): 
 			newCCNRegisterThread=ccnRegister(data['userId'],self.sendRequestToIPClient,data,self.mediaServer)   
 			newCCNRegisterThread.start()
@@ -43,7 +46,7 @@ class SimpleEcho(WebSocket):
 			info['threadRef']=newCCNRegisterThread		
 			registeredClients[data['userId']]=info
 				################################################
-			print 'Generating answer for REGISTER'
+			LOGGER( 'Generating answer for REGISTER')
 			message={}
 			message['ProxyServer']= self.mediaServer.getSocket()
 			"""			
@@ -55,12 +58,11 @@ class SimpleEcho(WebSocket):
 					}}
 
 			"""
-			print 'Answer to REGISTER request:',
-			print message
+			LOGGER( 'Answer to REGISTER request:',message)
 			message=json.dumps(message,ensure_ascii=False)
 			registeredClients[data['userId']]['obj'].sendMessage(unicode(message))
 		else:
-			print 'Client data update'
+			LOGGER( 'Client data update')
 			registeredClients[data['userId']]['threadRef'].updateSDP(data)
 
 			
@@ -69,31 +71,28 @@ class SimpleEcho(WebSocket):
 
 
 	def sendRequestToIPClient(self,name,callback):
-		print 'sendRequestToIPClient called with name: ',
-		print name
-		print 'ccnClients content :'
-		print self.ccnClients['/robert']
+		LOGGER( 'sendRequestToIPClient called with name: ',name)
+		LOGGER( 'ccnClients content :')
+		LOGGER( self.ccnClients['/robert'])
 		socket=self.ccnClients['/robert']['socket']
-		#print dir(socket)
+		#LOGGER( dir(socket))
 		socket.sendMessage('Hello client')
 		
 		#self.sendMessage('someone is calling you !')
 		
 		
 	def makeCall(self,data):
-		print 'makeCall method called with params:',
-		print data['From'],
-		print data['To']
+		LOGGER( 'makeCall method called with params:',data['From'], data['To'])
 		registeredClients[data['From']]['threadRef'].onMakeCall(data,self.makeCallCallback,self.makeCallErrorCallback)
 
 
 	def makeCallCallback(self,calling,message):
-		print 'makeCallCallback called with message: ',message	
+		LOGGER( 'makeCallCallback called with message: ',message)	
 		#self.sendMessage("asdasdasd")
 		registeredClients[calling]['obj'].sendMessage(unicode(message))		
 
 	def makeCallErrorCallback(self,calling,message):
-		print 'makeCallErrorCallback called with: ',calling,' , ',message		
+		LOGGER( 'makeCallErrorCallback called with: ',calling,' , ',message)		
 		#registeredClients[calling]['obj'].sendMessage(u+message)
 		
 		# !!!!!!!!!!!!!!!!!!!!		
@@ -102,18 +101,18 @@ class SimpleEcho(WebSocket):
 
 	# retrieving media packets
 	def getMedia(self,data):
-		print 'getMedia called'
+		LOGGER( 'getMedia called')
 		registeredClients[data['From']]['threadRef'].onGetMedia(data,self.getMediaCallback,self.getMediaErrorCallback)
 
 
 	########################  tutaj poprawic wysylanie do calling -- socket
 		
 	def getMediaCallback(self,calling,data,message):
-		print 'getMediaCallback called'
+		LOGGER( 'getMediaCallback called')
 		host='192.168.0.149'
 		port=8891
-		print 'Data to be send: ',
-		#print data
+		LOGGER( 'Data to be send: ')
+		#LOGGER( data
 		self.sendMessage(unicode(json.dumps(message,ensure_ascii=False)))
 		
 		# do poprawienia przy wysylaniu
@@ -121,36 +120,35 @@ class SimpleEcho(WebSocket):
 
 	def getMediaErrorCallback(self,calling,message):
 		answerMessage=json.dumps(message,ensure_ascii=False)
-		print 'getMediaErrorCallback called with: ',calling,' , ',message
+		LOGGER( 'getMediaErrorCallback called with: ',calling,' , ',message)
 		self.sendMessage(unicode(answerMessage))
 
 
 
 
 	def showNumberOfClients(self):
-		print 'Number of CCN Clients:',
-		print len(self.ccnClients)
+		LOGGER( 'Number of CCN Clients:',len(self.ccnClients))
 
 
 	def callback(self,message):
-		print message
+		LOGGER( message)
 
 	def handleConnected(self):
-		print 'Peer connected. Address: ',self.address
+		LOGGER( 'Peer connected. Address: ',self.address)
 
 		if hasattr(self,'mediaServer')==False:
 			self.mediaServer=MediaServer()
 			self.mediaServer.start()
 
 		clients.append(self)
-		print 'after append'
+		LOGGER( 'after append')
 		showConnectedClients()
-		print 'after show'
+		LOGGER( 'after show')
 		self.sendMessage(u'Hello Client')
 
 
 	def handleClose(self):
-		print 'Peer disconnected. Address: ',self.address
+		LOGGER( 'Peer disconnected. Address: ',self.address)
 		clients.remove(self)
 		showConnectedClients()
 		if hasattr(self,'mediaServer')==True:
@@ -162,63 +160,61 @@ class SimpleEcho(WebSocket):
 
 	def handleMessage(self):
 		
-		print 'Received type: '+str(type(self.data))
+		LOGGER( 'Received type: '+str(type(self.data)))
 		# DEBUG:
-		#print 'DEBUG SimpleEcho self: ',self
-		#print 'DEBUG: mediaServer ref: ',self.mediaServer
-		#print 'DEBUG: mediaServer socket: ',self.mediaServer.getSocket()
+		#LOGGER( 'DEBUG SimpleEcho self: ',self)
+		#LOGGER( 'DEBUG: mediaServer ref: ',self.mediaServer)
+		#LOGGER( 'DEBUG: mediaServer socket: ',self.mediaServer.getSocket())
 		
 		if type(self.data) is unicode:
-			print 'Signaling message'
-			print self.data
+			LOGGER( 'Signaling message')
+			LOGGER( self.data)
 			dane=json.loads(self.data)
-			#if dane:print type(dane)
-			print 'data type is :',type(dane)
+			#if dane:LOGGER( type(dane))
+			LOGGER( 'data type is :',type(dane))
 			if type(dane)is dict:
-				print dane['type']
+				LOGGER( dane['type'])
 		
 				if dane['type']=='REGISTER':
-					print 'REGISTER METHOD PROCESING'
-					print 'message from client: ',dane['userId']
+					LOGGER( 'REGISTER METHOD PROCESING')
+					LOGGER( 'message from client: ',dane['userId'])
 					
 					showRegisteredClients()
 					self.addNewClient(dane,self)
 					
 
 				if dane['type']=='CALL':
-					print 'CALL CONNECTION '
-					print 'self: ',self
+					LOGGER( 'CALL CONNECTION ')
+					LOGGER( 'self: ',self)
 					#self.clientSocket=self
-					#print 'self.clientSocket: ',self.clientSocket
-					print 'self.client: ',self.client
+					#LOGGER( 'self.clientSocket: ',self.clientSocket)
+					LOGGER( 'self.client: ',self.client)
 					#self.clientSocket.sendMessage('test')
 					self.makeCall(dane)
 
 				if dane['type']=='TEST':
-					print 'Test of connection with peer'
+					LOGGER( 'Test of connection with peer')
 					ss=json.dumps(dane,ensure_ascii=False)
 					
 					self.sendMessage(ss)
-					print 'Message to client sent.'
-					print 'Server socket: ',
-					print self
-					print 'Client socket: ',
-					print self.client
-					print 'Client address: ',self.address
+					LOGGER( 'Message to client sent.')
+					LOGGER( 'Server socket: ',self)
+					LOGGER( 'Client socket: ',self.client)
+					LOGGER( 'Client address: ',self.address)
 				if dane['type']=='GETMEDIA':
-					print 'GETMEDIA request arrived'
+					LOGGER( 'GETMEDIA request arrived')
 					self.getMedia(dane)
 
 					
 
 		if type(self.data) is bytearray:
 			#values=bytearray(self.data)
-			print 'Inside loop'
-			print self.data.__sizeof__()
+			LOGGER( 'Inside loop')
+			LOGGER( self.data.__sizeof__())
 			for v in self.data:
-				print v
-			#print dir(values)
-			#print 'Length array: '+str(values.length)
+				LOGGER( v)
+			#LOGGER( dir(values))
+			#LOGGER( 'Length array: '+str(values.length))
 				
 
 

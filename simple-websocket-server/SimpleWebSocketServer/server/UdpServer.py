@@ -3,6 +3,10 @@ import sys
 #from CCNBuffer import CCNBuffer
 import Queue
 import threading
+from utils import logger
+
+
+LOGGER=logger.Logger(True).get_logger()
 
 class UdpServer(threading.Thread):
 	def __init__(self,host,port,input_queue,output_queue):
@@ -15,7 +19,7 @@ class UdpServer(threading.Thread):
 		self.input_queue=input_queue
 		self.output_queue=output_queue
 		#self.ccnBuffer=None
-		print 'UdpServer initialised'
+		LOGGER('UdpServer initialised')
 
 
 	def __bindSocket__(self):
@@ -26,36 +30,33 @@ class UdpServer(threading.Thread):
 				self.port=port
 				self.isBinded=True
 			except socket.error,msg:
-				print 'Socket binding error: '+str(msg[0])+' Message: '+msg[1]
+				LOGGER('Socket binding error: '+str(msg[0])+' Message: '+msg[1])
 				if msg[0]==99:
-					print 'Check ip address of interface'
+					LOGGER('Check ip address of interface')
 					sys.exit()
 				if msg[0]==98:
-					print 'Trying to assign next port'
+					LOGGER('Trying to assign next port')
 					port+=1
 					if port-self.port>10:
-						print 'No possibility to find free port!'
+						LOGGER('No possibility to find free port!')
 						sys.exit()
 					
 				#sys.exit()
 	def run(self):
-		print 'UdpServer thread starting'
+		LOGGER('UdpServer thread starting')
 		self._start_()
 
 	def _start_(self):
 		try:
 			self.socket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-			print 'Socket created'
+			LOGGER('Socket created')
 		except socket.error:
-			print 'Failed to create socket'
+			LOGGER('Failed to create socket')
 			sys.exit()
 		
 		self.__bindSocket__()		
 
-		print 'UdpServer started at adress: ',
-		print self.host,
-		print ' port: ',
-		print self.port
+		LOGGER('UdpServer started at adress: ',self.host,' port: ',self.port)
 
 		# buffer for CCN packets
 		#buf=CCNBuffer(100)
@@ -70,29 +71,29 @@ class UdpServer(threading.Thread):
 				self.peerSocket=addr
 				self.peerSet=True				
 			if not data: 
-				print 'No data received '
+				LOGGER('No data received ')
 				#break
-			print 'Obtained data from: '+str(addr)
+			LOGGER('Obtained data from: '+str(addr))
 			#buf.addPacket(data)
 			#buf.showBufferState()
 			#reply='OK ... '+data
 			#self.socket.sendto(reply,addr)
-			#print 'Message sent'
+			#LOGGER('Message sent')
 			if data:
 				self.output_queue.put(data)
 			if not self.input_queue.empty():
 				data_to_send=self.input_queue.get()
 				self.sendData(data_to_send,self.getSocket())
 
-			else: print 'Input queue empty !'
+			else: LOGGER('Input queue empty !')
 
 	
 	def stop(self):
 		if self.socket:
 			self.socket.close()
-			print 'UdpServer socket closed !'
+			LOGGER('UdpServer socket closed !')
 		else:
-			print 'No socket to be closed !'	
+			LOGGER('No socket to be closed !')
 
 	def getSocket(self):
 		return (self.host,self.port)
@@ -101,12 +102,12 @@ class UdpServer(threading.Thread):
 		return self.peerSocket
 
 	def sendData(self,data,socket):
-		print 'sendData called with peer: ',socket
+		LOGGER('sendData called with peer: ',socket)
 		self.socket.sendto(data,socket)
 
 
 if __name__=='__main__':
-	print 'UdpServer started from __main__'
+	LOGGER('UdpServer started from __main__')
 	us=UdpServer('10.0.2.15',8888,Queue.Queue(),Queue.Queue())
 	us.start()
 	us.stop()

@@ -1,5 +1,8 @@
 import pyccn as ccn
 import json
+from utils import logger
+
+LOGGER=logger.Logger().get_logger()
 
 class callbackInfo():
 	def __init__(self):
@@ -17,6 +20,7 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 		pass
 
 	def on_read_result(self,data):
+		LOGGER( 'on_read_result called !!!')
 		self.payload=data
 		self.inProgress=False	
 
@@ -26,23 +30,23 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 		elif(kind==ccn.UPCALL_INTEREST):
 			self.inProgress=True
 			self.payload='test hello packet'
-			print 'User: ',self.nameId
-			print 'Interest received !!!'
+			LOGGER( 'User: ',self.nameId)
+			LOGGER( 'Interest received !!!')
 			name=upcallInfo.Interest.name
-			print 'Received request: '+str(name)
+			LOGGER( 'Received request: '+str(name))
 			#payload='Hello Client'
 			#payload='test hello packet'
 			if('/Media/' in str(name)):
-				print ' /Media/ triger found in name'
+				LOGGER( ' /Media/ triger found in name')
 				if hasattr(self,'mediaServer'):
-					print 'OK. MediaServer exists'
+					LOGGER( 'OK. MediaServer exists')
 
 
 					#payload=self.mediaServer.buffer.readPacket()
 						
 					'''
 					if hasattr(self.mediaServer.udpServer,'ccnBuffer'):
-						print 'OK. Buffer found !!!'
+						LOGGER( 'OK. Buffer found !!!')
 						payload=self.mediaServer.buffer.readPacket()
 					'''
 					self.mediaServer.read_queue.put(self.on_read_result)
@@ -88,7 +92,7 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 			if(co.matchesInterest(upcallInfo.Interest)):
 				res=handler.put(co)
 				if(res>=0):
-					#print payload
+					#LOGGER( payload)
 					return ccn.RESULT_INTEREST_CONSUMED
 				else:
 					raise SystemError('Failed to put ContentObject')
