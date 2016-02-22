@@ -4,6 +4,7 @@ from utils.converter import ice_offer_parser
 from utils.usocket import get_ip_address
 from server.CCNBuffer import CCNBuffer
 import Queue,time
+#from collections import deque
 
 class MediaServer(threading.Thread):
 	def __init__(self):
@@ -14,6 +15,7 @@ class MediaServer(threading.Thread):
 		self.peerSocket=None #(ipaddress,port)
 		self.input_queue=Queue.Queue()
 		self.output_queue=Queue.Queue()
+		#self.read_queue=deque(maxlen=1000)
 		self.read_queue=Queue.Queue()
 		self.answer_queue=None
 		self.buffer=CCNBuffer(1000)
@@ -34,6 +36,10 @@ class MediaServer(threading.Thread):
 			if not self.output_queue.empty():
 				self.buffer.addPacket(self.output_queue.get())
 				print 'Data into buffer saved'
+			if not self.read_queue.empty():
+				self.read_queue.get()(self.buffer.readPacket())
+				print 'Data from buffer consumed'
+
 
 	'''
 	def onStop(self):
