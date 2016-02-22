@@ -112,7 +112,7 @@ class SimpleEcho(WebSocket):
 		host='192.168.0.149'
 		port=8891
 		LOGGER( 'Data to be send: ')
-		#LOGGER( data
+		#LOGGER( data)
 		self.sendMessage(unicode(json.dumps(message,ensure_ascii=False)))
 		
 		# do poprawienia przy wysylaniu

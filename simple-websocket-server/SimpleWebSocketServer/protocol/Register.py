@@ -4,7 +4,7 @@ from utils import converter,logger
 from protocol.Producer import ProducerClosure
 
 
-LOGGER=logger.Logger().get_logger()
+LOGGER=logger.Logger(True).get_logger()
 
 class ccnRegister(threading.Thread):
 	def __init__(self,threadId,callback,sdp,mediaServer):
@@ -94,7 +94,7 @@ class ccnRegister(threading.Thread):
 		LOGGER( 'Request URL: ',urlName)
 		name=ccn.Name(str(urlName))
 		ccnHandler=ccn.CCN()
-		co=ccnHandler.get(name,timeoutms=100)
+		co=ccnHandler.get(name,timeoutms=500)
 		if(co==None):
 			LOGGER( 'No answer from server')
 			message={"TYPE":"GETMEDIA","RESULT":"NOUSER"}

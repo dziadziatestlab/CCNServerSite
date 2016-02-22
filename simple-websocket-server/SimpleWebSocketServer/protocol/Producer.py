@@ -2,7 +2,7 @@ import pyccn as ccn
 import json
 from utils import logger
 
-LOGGER=logger.Logger().get_logger()
+LOGGER=logger.Logger(True).get_logger()
 
 class callbackInfo():
 	def __init__(self):
@@ -53,6 +53,8 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 					# wait for data response	
 					while self.inProgress:
 						pass
+
+					LOGGER('data from buffer obtained !!!')
 
 				else:
 					self.payload='No media server found'

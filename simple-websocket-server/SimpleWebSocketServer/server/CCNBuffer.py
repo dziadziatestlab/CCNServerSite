@@ -6,7 +6,7 @@ from utils import logger
 from collections import deque
 
 
-LOGGER=logger.Logger().get_logger()
+LOGGER=logger.Logger(True).get_logger()
 
 
 class CCNBuffer():
@@ -19,6 +19,7 @@ class CCNBuffer():
         self._deq_.clear()
         
     def addPacket(self,data):
+	LOGGER('write packet to buffer ')
         self._deq_.append(data)
         self._bufferLoad_=self._deq_.__len__()
         
@@ -26,6 +27,7 @@ class CCNBuffer():
         self.showBufferState()
         
     def readPacket(self):
+	LOGGER('read packet from buffer')
         try:
             data=self._deq_.popleft()
         except IndexError: #exceptions.IndexError:
