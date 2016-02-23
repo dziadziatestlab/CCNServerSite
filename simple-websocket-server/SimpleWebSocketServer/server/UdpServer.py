@@ -82,8 +82,11 @@ class UdpServer(threading.Thread):
 			if data:
 				self.output_queue.put(data)
 			if not self.input_queue.empty():
-				data_to_send=self.input_queue.get()
-				self.sendData(data_to_send,self.getSocket())
+				if hasattr(self,'peerSocket'):
+					data_to_send=self.input_queue.get()
+					self.sendData(data_to_send,self.peerSocket)
+				else:
+					LOGGER('No peerSocket set !!! Where to send ???')
 
 			else: LOGGER('Input queue empty !')
 

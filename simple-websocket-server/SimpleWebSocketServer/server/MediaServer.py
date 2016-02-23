@@ -43,6 +43,13 @@ class MediaServer(threading.Thread):
 			if not self.read_queue.empty():
 				self.read_queue.get()(self.buffer.readPacket())
 				LOGGER( 'Data from buffer consumed')
+			'''			
+			if not self.input_queue.empty():
+				LOGGER('Data in the queue to be send')
+				data=self.input_queue.get()
+				LOGGER('PeerSocket to which should send:',self.peerSocket)
+				self.
+			'''	
 
 
 	'''
