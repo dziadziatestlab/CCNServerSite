@@ -5,6 +5,7 @@ from protocol.Register import ccnRegister
 from utils import logger
 
 LOGGER=logger.Logger().get_logger()
+LOGGER2=logger.Logger().get_logger()
 
 clients=[]
 registeredClients={}
@@ -61,6 +62,7 @@ class SimpleEcho(WebSocket):
 			LOGGER( 'Answer to REGISTER request:',message)
 			message=json.dumps(message,ensure_ascii=False)
 			registeredClients[data['userId']]['obj'].sendMessage(unicode(message))
+			LOGGER2('Registered clients: \n',registeredClients)
 		else:
 			LOGGER( 'Client data update')
 			registeredClients[data['userId']]['threadRef'].updateSDP(data)
@@ -83,11 +85,15 @@ class SimpleEcho(WebSocket):
 		
 	def makeCall(self,data):
 		LOGGER( 'makeCall method called with params:',data['From'], data['To'])
+		LOGGER2('makeCall data: \n',data)
+		LOGGER2('makeCall clients:\n',registeredClients)
+		LOGGER2('makeCall client:',registeredClients[data['From']]['threadRef'])
 		registeredClients[data['From']]['threadRef'].onMakeCall(data,self.makeCallCallback,self.makeCallErrorCallback)
-
+		
 
 	def makeCallCallback(self,calling,message):
-		LOGGER( 'makeCallCallback called with message: ',message)	
+		LOGGER( 'makeCallCallback called with message: ',message)
+		LOGGER2( 'makeCallCallback called with message: ',message)	
 		#self.sendMessage("asdasdasd")
 		registeredClients[calling]['obj'].sendMessage(unicode(message))		
 
@@ -149,6 +155,7 @@ class SimpleEcho(WebSocket):
 
 	def handleClose(self):
 		LOGGER( 'Peer disconnected. Address: ',self.address)
+		LOGGER2( 'Peer disconnected. Address: ',self.address)
 		clients.remove(self)
 		showConnectedClients()
 		if hasattr(self,'mediaServer')==True:
@@ -161,6 +168,7 @@ class SimpleEcho(WebSocket):
 	def handleMessage(self):
 		
 		LOGGER( 'Received type: '+str(type(self.data)))
+		
 		# DEBUG:
 		#LOGGER( 'DEBUG SimpleEcho self: ',self)
 		#LOGGER( 'DEBUG: mediaServer ref: ',self.mediaServer)
@@ -169,6 +177,7 @@ class SimpleEcho(WebSocket):
 		if type(self.data) is unicode:
 			LOGGER( 'Signaling message')
 			LOGGER( self.data)
+			LOGGER2('Received data: ',self.data)
 			dane=json.loads(self.data)
 			#if dane:LOGGER( type(dane))
 			LOGGER( 'data type is :',type(dane))

@@ -2,7 +2,8 @@ import pyccn as ccn
 import json
 from utils import logger
 
-LOGGER=logger.Logger(True).get_logger()
+LOGGER=logger.Logger().get_logger()
+LOGGER2=logger.Logger().get_logger()
 
 class callbackInfo():
 	def __init__(self):
@@ -14,6 +15,7 @@ class callbackInfo():
 
 class ProducerClosure(ccn.Closure,callbackInfo):
 	def __init__(self):
+		LOGGER2('Producer init !!!')
 		callbackInfo.__init__(self)
 
 	def _queue_request_(self):
@@ -25,15 +27,17 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 		self.inProgress=False	
 
 	def upcall(self,kind,upcallInfo):
+		LOGGER2(' Producer upcall called !!!!!!')
 		if(kind==ccn.UPCALL_FINAL):
 			pass
 		elif(kind==ccn.UPCALL_INTEREST):
 			self.inProgress=True
-			self.payload='test hello packet'
+			self.payload='unknow request'
 			LOGGER( 'User: ',self.nameId)
 			LOGGER( 'Interest received !!!')
 			name=upcallInfo.Interest.name
 			LOGGER( 'Received request: '+str(name))
+			LOGGER2( 'Received request: '+str(name))
 			#payload='Hello Client'
 			#payload='test hello packet'
 			if('/Media/' in str(name)):
@@ -58,12 +62,18 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 
 				else:
 					self.payload='No media server found'
+			
+			if('/call/' in str(name)):
+
+				self.payload=json.dumps(self.sdpInfo,ensure_ascii=False)
+
+			'''			
 			else:
 				self.payload=json.dumps(self.sdpInfo,ensure_ascii=False)
 			
-
+			'''
 			
-
+			LOGGER('payload to pack into CO message:\n',self.payload)
 
 
 

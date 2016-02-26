@@ -4,7 +4,8 @@ from utils import converter,logger
 from protocol.Producer import ProducerClosure
 
 
-LOGGER=logger.Logger(True).get_logger()
+LOGGER=logger.Logger().get_logger()
+LOGGER2=logger.Logger().get_logger()
 
 class ccnRegister(threading.Thread):
 	def __init__(self,threadId,callback,sdp,mediaServer):
@@ -39,7 +40,7 @@ class ccnRegister(threading.Thread):
 		LOGGER( 'ccnRegister thread started !')
 		name=ccn.Name(str(self.threadId))
 		LOGGER( 'Name:',name)
-		handler=ccn.CCN()
+		self.handler=ccn.CCN()
 
 
 		interest_handler=ProducerClosure()
@@ -47,11 +48,11 @@ class ccnRegister(threading.Thread):
 		interest_handler.sdpInfo=self.sdp #only for test first phase
 		interest_handler.nameId=name
 		interest_handler.mediaServer=self.mediaServer
-		res=handler.setInterestFilter(name,interest_handler)
+		res=self.handler.setInterestFilter(name,interest_handler)
 		if(res<0):
 			LOGGER( 'Some problems occured !')
 		
-		handler.run(-1)
+		self.handler.run(-1)
 		raise SystemError('Exited loop!')
 	def onInterest(self,message):
 		LOGGER( 'threadId: ',self.threadId,' onInterest called')
@@ -62,7 +63,7 @@ class ccnRegister(threading.Thread):
 		self.data=data
 		LOGGER( 'threadId: ',self.threadId,' onMakeCall called')
 		LOGGER( 'sending request to: ',data['To'])
-		
+		LOGGER2( 'threadId: ',self.threadId,' onMakeCall called')
 	
 		
 		urlName=data['To']+'/call'+data['From']
@@ -70,13 +71,34 @@ class ccnRegister(threading.Thread):
 		
 		name=ccn.Name(str(urlName))
 		ccnHandler=ccn.CCN()
+		LOGGER('Before GET request to CCN')
+		if 'co' in locals(): LOGGER2('ContentObject  exists in locals')
+		if 'co' in globals(): LOGGER2('ContentObject  exists in globals') 
+		if 'name' in locals(): 
+			LOGGER2('name  exists in locals')
+			LOGGER2(' request name is: ',name)
+		if 'name' in globals(): LOGGER2('name  exists in globals')
+		
+					
 		co=ccnHandler.get(name,timeoutms=100)
+		LOGGER2('thread onMakeCall after co get !!!')
+		LOGGER('onMakeCall called !!!!')
+		
+		
+		
+		LOGGER('After GET request to CCN')
+		if 'co' in locals(): LOGGER('ContentObject  exists in locals')
+		if 'co' in globals(): LOGGER('ContentObject  exists in globals') 
 		if(co==None):
 			LOGGER( 'No answer from server')
+			LOGGER2( 'No answer from server')
 			errorCallback(self.data['From'],'No answer from called')
 		else:
 			LOGGER( co.name)
+			LOGGER2('co name: ',co.name)
+			###################
 			callback(self.data['From'],co.content)			
+		
 
 	def updateSDP(self,sdp):
 		self.sdp['SDP']=sdp['SDP']

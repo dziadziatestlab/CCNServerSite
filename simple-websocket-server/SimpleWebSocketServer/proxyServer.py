@@ -9,7 +9,7 @@ from server.SimpleEcho import SimpleEcho
 #from MediaServer import MediaServer
 
 
-LOGGER=logger.Logger(True).get_logger()
+LOGGER=logger.Logger().get_logger()
 
 config_port=8000
 config_host=''

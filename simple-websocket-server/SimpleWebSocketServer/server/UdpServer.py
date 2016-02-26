@@ -6,7 +6,7 @@ import threading
 from utils import logger
 
 
-LOGGER=logger.Logger(True).get_logger()
+LOGGER=logger.Logger().get_logger()
 
 class UdpServer(threading.Thread):
 	def __init__(self,host,port,input_queue,output_queue):
