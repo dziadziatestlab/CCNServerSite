@@ -4,7 +4,7 @@ from utils import logger
 
 LOGGER=logger.Logger().get_logger()
 LOGGER2=logger.Logger().get_logger()
-LOGGER3=logger.Logger().get_logger()
+LOGGER3=logger.Logger(True).get_logger()
 
 class callbackInfo():
 	def __init__(self):
@@ -26,6 +26,7 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 	def on_read_result(self,data):
 		LOGGER( 'on_read_result called !!!')
 		LOGGER3( '#Producer on_read_result called with data:\n',data)
+		if data==None: self.payload=''		
 		self.payload=data
 		self.inProgress=False	
 
