@@ -6,7 +6,9 @@ from utils import logger
 from server.CCNBuffer import CCNBuffer
 import Queue,time
 
-LOGGER=logger.Logger(True).get_logger()
+LOGGER=logger.Logger().get_logger()
+LOGGER2=logger.Logger().get_logger()
+LOGGER3=logger.Logger().get_logger()
 
 #from collections import deque
 
@@ -38,13 +40,24 @@ class MediaServer(threading.Thread):
 		LOGGER( 'MediaServer _start_ method called')
 		while self.isRunning:
 			if not self.output_queue.empty():
-				self.buffer.addPacket(self.output_queue.get())
+				LOGGER3('#MediaServer output_queue -- data to buffer')				
+				LOGGER('data in the output_queue to buffer')
+				data_from_output_queue=self.output_queue.get()
+				self.buffer.addPacket(data_from_output_queue)
 				LOGGER( 'Data into buffer saved')
+				LOGGER2('MediaServer write to buffer: \n',data_from_output_queue)
+				
 			if not self.read_queue.empty():
-				self.read_queue.get()(self.buffer.readPacket())
+				LOGGER3('#MediaServer read_queue -- data from buffer')
+				data_to_send=self.buffer.readPacket()
+				LOGGER3('#MediaServer data from buffer: \n',data_to_send)
+				LOGGER('data from buffer to packaging: \n',data_to_send)
+				self.read_queue.get()(data_to_send)
 				LOGGER( 'Data from buffer consumed')
+				LOGGER2('MediaServer data from buffer to packaging: \n',data_to_send)
 						
 			if not self.input_queue.empty():
+				LOGGER3('#MediaServer input_queue -- data to send')
 				LOGGER('Data in the queue to be send')
 				data=self.input_queue.get()
 				LOGGER('PeerSocket to which should send:',self.peerSocket)

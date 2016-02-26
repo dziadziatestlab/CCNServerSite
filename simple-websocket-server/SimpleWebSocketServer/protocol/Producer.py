@@ -4,6 +4,7 @@ from utils import logger
 
 LOGGER=logger.Logger().get_logger()
 LOGGER2=logger.Logger().get_logger()
+LOGGER3=logger.Logger().get_logger()
 
 class callbackInfo():
 	def __init__(self):
@@ -17,12 +18,14 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 	def __init__(self):
 		LOGGER2('Producer init !!!')
 		callbackInfo.__init__(self)
+		self.payload=''
 
 	def _queue_request_(self):
 		pass
 
 	def on_read_result(self,data):
 		LOGGER( 'on_read_result called !!!')
+		LOGGER3( '#Producer on_read_result called with data:\n',data)
 		self.payload=data
 		self.inProgress=False	
 
@@ -38,6 +41,7 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 			name=upcallInfo.Interest.name
 			LOGGER( 'Received request: '+str(name))
 			LOGGER2( 'Received request: '+str(name))
+			LOGGER3(' #Producer received request: ',str(name))
 			#payload='Hello Client'
 			#payload='test hello packet'
 			if('/Media/' in str(name)):
@@ -63,7 +67,7 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 				else:
 					self.payload='No media server found'
 			
-			if('/call/' in str(name)):
+			elif('/call/' in str(name)):
 
 				self.payload=json.dumps(self.sdpInfo,ensure_ascii=False)
 
@@ -74,6 +78,7 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 			'''
 			
 			LOGGER('payload to pack into CO message:\n',self.payload)
+			LOGGER3('#Producer payload to pack into CO message:\n',self.payload)
 
 
 

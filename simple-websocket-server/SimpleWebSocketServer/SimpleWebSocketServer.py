@@ -354,7 +354,7 @@ class WebSocket(object):
           If the data is a bytearray object then the frame is sent as Binary. 
       """
       # only for test by OrangeLabs
-      print "sendMessage method called"
+      #print "sendMessage method called"
 
       opcode = BINARY
       if isinstance(data, unicode):
@@ -364,9 +364,9 @@ class WebSocket(object):
 
    def _sendMessage(self, fin, opcode, data):
 	# only for test by OrangeLabs
-	print '_sendMessage called with type and data: ',
-	print type(data),
-	print data	
+	#print '_sendMessage called with type and data: ',
+	#print type(data),
+	#print data	
 
         header = bytearray()
         b1 = 0
