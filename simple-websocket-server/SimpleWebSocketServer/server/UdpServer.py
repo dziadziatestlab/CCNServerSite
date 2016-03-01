@@ -67,6 +67,8 @@ class UdpServer(threading.Thread):
 			d=self.socket.recvfrom(1024)
 			data=d[0]
 			addr=d[1]
+			LOGGER('#UdpServer type of data: ',type(data))
+			LOGGER('#UdpServer data length: ',data.__sizeof__())
 			if self.peerSet==False:
 				self.peerSocket=addr
 				self.peerSet=True				

@@ -15,6 +15,7 @@ LOGGER3=logger.Logger().get_logger()
 class MediaServer(threading.Thread):
 	def __init__(self):
 		threading.Thread.__init__(self)
+		self.threadName=''
 		self.HOST=''
 		self.PORT=8888
 		self.udpServer=None
@@ -24,14 +25,18 @@ class MediaServer(threading.Thread):
 		#self.read_queue=deque(maxlen=1000)
 		self.read_queue=Queue.Queue()
 		self.answer_queue=None
-		self.buffer=CCNBuffer(1000)
+		self.buffer=CCNBuffer(10000)
 		self.isRunning=True
 		LOGGER( 'MediaServer thread initialised.')
+	
+	def setThreadName(self,threadId):
+		self.threadName=threadId
+		self.buffer.threadName=threadId
 
 	def run(self):
 		self.HOST=get_ip_address()
 		LOGGER( 'MediaServer thread starting')
-		self.udpServer=UdpServer(self.HOST,self.PORT,self.input_queue,self.output_queue)
+		self.udpServer=UdpServer					 (self.HOST,self.PORT,self.input_queue,self.output_queue)		
 		self.udpServer.start()
 		self._start_()
 		

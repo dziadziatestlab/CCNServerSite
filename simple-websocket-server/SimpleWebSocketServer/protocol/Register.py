@@ -6,6 +6,7 @@ from protocol.Producer import ProducerClosure
 
 LOGGER=logger.Logger().get_logger()
 LOGGER2=logger.Logger().get_logger()
+LOGGER3=logger.Logger(True).get_logger()
 
 class ccnRegister(threading.Thread):
 	def __init__(self,threadId,callback,sdp,mediaServer):
@@ -18,6 +19,7 @@ class ccnRegister(threading.Thread):
 		self.data=None
 		self.mediaCounter=0
 		self.mediaServer=mediaServer
+		self.mediaServer.setThreadName(self.threadId)
 		self.isPeerSet=False
 		LOGGER( 'ccnRegister thread constructor called')
 		#LOGGER( 'dir mediaServer: ',dir(self.mediaServer))		
@@ -120,18 +122,20 @@ class ccnRegister(threading.Thread):
 		if(co==None):
 			LOGGER( 'No answer from server')
 			message={"TYPE":"GETMEDIA","RESULT":"NOUSER"}
-			
+			LOGGER3('# Register threadId: ',self.threadId,'message:\n',message)
 			errorCallback(self.data['From'],message)
 		else:
 			
 			if co.content=='':
 				LOGGER( 'BUFFER EMPTY')
 				message={"TYPE":"GETMEDIA","RESULT":"NODATA"}
+				LOGGER3('# Register threadId: ',self.threadId,'message:\n',message)
 				errorCallback(self.data['From'],message)		
 			else:			
 				message={"TYPE":"GETMEDIA","RESULT":"OK",
 					"MEDIACOUNTER":self.mediaCounter
 					}
+				LOGGER3('# Register threadId: ',self.threadId,'message:\n',message)
 				self.mediaServer.input_queue.put(co.content)
 				callback(self.data['From'],co.content,message)
 

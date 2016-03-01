@@ -6,6 +6,7 @@ from utils import logger
 
 LOGGER=logger.Logger().get_logger()
 LOGGER2=logger.Logger().get_logger()
+LOGGER3=logger.Logger(True).get_logger()
 
 clients=[]
 registeredClients={}
@@ -16,7 +17,7 @@ def showConnectedClients():
 		LOGGER( client.address)
 
 def showRegisteredClients():
-	LOGGER( 'Registered clients:')
+	LOGGER2( 'Registered clients:')
 	for client in registeredClients:
 		LOGGER( client,'  :  ',registeredClients[client]['obj'].address)
 
@@ -141,6 +142,7 @@ class SimpleEcho(WebSocket):
 
 	def handleConnected(self):
 		LOGGER( 'Peer connected. Address: ',self.address)
+		LOGGER3( 'Peer connected. Address: ',self.address)
 
 		if hasattr(self,'mediaServer')==False:
 			self.mediaServer=MediaServer()
@@ -155,7 +157,7 @@ class SimpleEcho(WebSocket):
 
 	def handleClose(self):
 		LOGGER( 'Peer disconnected. Address: ',self.address)
-		LOGGER2( 'Peer disconnected. Address: ',self.address)
+		LOGGER3( 'Peer disconnected. Address: ',self.address)
 		clients.remove(self)
 		showConnectedClients()
 		if hasattr(self,'mediaServer')==True:

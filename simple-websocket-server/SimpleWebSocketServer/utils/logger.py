@@ -1,4 +1,4 @@
-
+from datetime import datetime as stamp
 
 
 class Logger():
@@ -7,6 +7,7 @@ class Logger():
 	
 	def __logger__(self,*msgs):
 		if self.isAllowed:
+			print stamp.now()," ::: ",
 			for msg in msgs:
 				print msg,
 			print ' '
