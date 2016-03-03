@@ -4,8 +4,8 @@ from utils import converter,logger
 from protocol.Producer import ProducerClosure
 
 
-LOGGER=logger.Logger().get_logger()
-LOGGER2=logger.Logger().get_logger()
+LOGGER=logger.Logger(True).get_logger()
+LOGGER2=logger.Logger(True).get_logger()
 LOGGER3=logger.Logger(True).get_logger()
 
 class ccnRegister(threading.Thread):
@@ -14,8 +14,8 @@ class ccnRegister(threading.Thread):
 		self.threadId=threadId
 		self.callback=callback
 		self.sdp={}
-		self.sdp['SDP']=sdp['SDP']
-		self.sdp['ICE']=sdp['ICE']
+		#self.sdp['SDP']=sdp['SDP']
+		#self.sdp['ICE']=sdp['ICE']
 		self.data=None
 		self.mediaCounter=0
 		self.mediaServer=mediaServer
@@ -24,7 +24,7 @@ class ccnRegister(threading.Thread):
 		LOGGER( 'ccnRegister thread constructor called')
 		#LOGGER( 'dir mediaServer: ',dir(self.mediaServer))		
 		LOGGER( 'media server for this thread: ',self.mediaServer.getSocket())
-		self.__setPeer__()
+		#self.__setPeer__()
 
 	def __setPeer__(self):
 		LOGGER( '__setPeer__ called', self.isPeerSet, len(self.sdp['ICE']))
@@ -138,6 +138,11 @@ class ccnRegister(threading.Thread):
 				LOGGER3('# Register threadId: ',self.threadId,'message:\n',message)
 				self.mediaServer.input_queue.put(co.content)
 				callback(self.data['From'],co.content,message)
+
+	def onPutMedia(self,data):
+		LOGGER( '#Register threadId: ',self.threadId,' onPutMedia called')
+		self.mediaServer.output_queue.put(data)
+		
 
 
 

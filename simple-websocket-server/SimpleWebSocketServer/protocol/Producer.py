@@ -2,9 +2,9 @@ import pyccn as ccn
 import json
 from utils import logger
 
-LOGGER=logger.Logger().get_logger()
-LOGGER2=logger.Logger().get_logger()
-LOGGER3=logger.Logger().get_logger()
+LOGGER=logger.Logger(True).get_logger()
+LOGGER2=logger.Logger(True).get_logger()
+LOGGER3=logger.Logger(True).get_logger()
 
 class callbackInfo():
 	def __init__(self):

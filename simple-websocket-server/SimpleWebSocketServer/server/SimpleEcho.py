@@ -4,8 +4,8 @@ from server.MediaServer import MediaServer
 from protocol.Register import ccnRegister
 from utils import logger
 
-LOGGER=logger.Logger().get_logger()
-LOGGER2=logger.Logger().get_logger()
+LOGGER=logger.Logger(True).get_logger()
+LOGGER2=logger.Logger(True).get_logger()
 LOGGER3=logger.Logger(True).get_logger()
 
 clients=[]
@@ -65,11 +65,9 @@ class SimpleEcho(WebSocket):
 			registeredClients[data['userId']]['obj'].sendMessage(unicode(message))
 			LOGGER2('Registered clients: \n',registeredClients)
 		else:
-			LOGGER( 'Client data update')
-			registeredClients[data['userId']]['threadRef'].updateSDP(data)
-
-			
-
+			pass
+			#LOGGER( 'Client data update')
+			#registeredClients[data['userId']]['threadRef'].updateSDP(data)
 
 
 
@@ -105,10 +103,14 @@ class SimpleEcho(WebSocket):
 		# !!!!!!!!!!!!!!!!!!!!		
 		#registeredClients[calling]['obj'].sendMessage(unicode(message))
 
+	# storing data into buffer	
+	def putMedia(self,data):
+		LOGGER('#SimpleEcho putMedia called')
+		registeredClients['test']['threadRef'].onPutMedia(data)
 
 	# retrieving media packets
 	def getMedia(self,data):
-		LOGGER( 'getMedia called')
+		LOGGER( '#SimpleEcho getMedia called')
 		registeredClients[data['From']]['threadRef'].onGetMedia(data,self.getMediaCallback,self.getMediaErrorCallback)
 
 
@@ -169,7 +171,7 @@ class SimpleEcho(WebSocket):
 
 	def handleMessage(self):
 		
-		LOGGER( 'Received type: '+str(type(self.data)))
+		LOGGER3( 'Received type: '+str(type(self.data)))
 		
 		# DEBUG:
 		#LOGGER( 'DEBUG SimpleEcho self: ',self)
@@ -224,6 +226,7 @@ class SimpleEcho(WebSocket):
 			LOGGER( self.data.__sizeof__())
 			for v in self.data:
 				LOGGER( v)
+			self.putMedia(self.data)
 			#LOGGER( dir(values))
 			#LOGGER( 'Length array: '+str(values.length))
 				

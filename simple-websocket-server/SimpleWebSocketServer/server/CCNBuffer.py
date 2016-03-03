@@ -6,7 +6,7 @@ from utils import logger
 from collections import deque
 
 
-LOGGER=logger.Logger().get_logger()
+LOGGER=logger.Logger(True).get_logger()
 LOGGER3=logger.Logger(True).get_logger()
 
 
