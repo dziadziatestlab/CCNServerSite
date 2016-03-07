@@ -2,6 +2,7 @@ import pyccn as ccn
 import threading,time
 from utils import converter,logger
 from protocol.Producer import ProducerClosure
+from server.MediaServer import MediaServer
 
 
 LOGGER=logger.Logger(True).get_logger()
@@ -9,7 +10,7 @@ LOGGER2=logger.Logger(True).get_logger()
 LOGGER3=logger.Logger(True).get_logger()
 
 class ccnRegister(threading.Thread):
-	def __init__(self,threadId,callback,sdp,mediaServer):
+	def __init__(self,threadId,callback,sdp,peerAddress):
 		threading.Thread.__init__(self)
 		self.threadId=threadId
 		self.callback=callback
@@ -18,12 +19,12 @@ class ccnRegister(threading.Thread):
 		#self.sdp['ICE']=sdp['ICE']
 		self.data=None
 		self.mediaCounter=0
-		self.mediaServer=mediaServer
+		self.mediaServer=MediaServer() #mediaServer
 		self.mediaServer.setThreadName(self.threadId)
 		self.isPeerSet=False
 		LOGGER( 'ccnRegister thread constructor called')
 		#LOGGER( 'dir mediaServer: ',dir(self.mediaServer))		
-		LOGGER( 'media server for this thread: ',self.mediaServer.getSocket())
+		
 		#self.__setPeer__()
 
 	def __setPeer__(self):
@@ -40,6 +41,8 @@ class ccnRegister(threading.Thread):
 		
 	def run(self):
 		LOGGER( 'ccnRegister thread started !')
+		self.mediaServer.start()
+		LOGGER( 'media server for this thread: ',self.mediaServer.getSocket())
 		name=ccn.Name(str(self.threadId))
 		LOGGER( 'Name:',name)
 		self.handler=ccn.CCN()
@@ -136,7 +139,7 @@ class ccnRegister(threading.Thread):
 					"MEDIACOUNTER":self.mediaCounter
 					}
 				LOGGER3('# Register threadId: ',self.threadId,'message:\n',message)
-				self.mediaServer.input_queue.put(co.content)
+				#self.mediaServer.input_queue.put(co.content)
 				callback(self.data['From'],co.content,message)
 
 	def onPutMedia(self,data):

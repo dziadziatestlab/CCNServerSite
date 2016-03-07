@@ -16,8 +16,8 @@ class MediaServer(threading.Thread):
 	def __init__(self):
 		threading.Thread.__init__(self)
 		self.threadName=''
-		self.HOST=''
-		self.PORT=8888
+		self.HOST=get_ip_address()
+		self.PORT=8000
 		self.udpServer=None
 		self.peerSocket=None #(ipaddress,port)
 		self.input_queue=Queue.Queue()
@@ -27,22 +27,22 @@ class MediaServer(threading.Thread):
 		self.answer_queue=None
 		self.buffer=CCNBuffer(10000)
 		self.isRunning=True
-		LOGGER( 'MediaServer thread initialised.')
+		LOGGER3( 'MediaServer thread initialised.')
 	
 	def setThreadName(self,threadId):
 		self.threadName=threadId
 		self.buffer.threadName=threadId
 
 	def run(self):
-		self.HOST=get_ip_address()
-		LOGGER( 'MediaServer thread starting')
-		self.udpServer=UdpServer					 (self.HOST,self.PORT,self.input_queue,self.output_queue)		
-		self.udpServer.start()
+		#self.HOST=get_ip_address()
+		LOGGER3( 'MediaServer thread starting')
+		#self.udpServer=UdpServer					 (self.HOST,self.PORT,self.input_queue,self.output_queue)		
+		#self.udpServer.start()
 		self._start_()
 		
 
 	def _start_(self):
-		LOGGER( 'MediaServer _start_ method called')
+		LOGGER3( 'MediaServer _start_ method called')
 		while self.isRunning:
 			if not self.output_queue.empty():
 				LOGGER3('#MediaServer output_queue -- data to buffer')				
@@ -55,7 +55,7 @@ class MediaServer(threading.Thread):
 			if not self.read_queue.empty():
 				LOGGER3('#MediaServer read_queue -- data from buffer')
 				data_to_send=self.buffer.readPacket()
-				LOGGER3('#MediaServer data from buffer: \n',data_to_send)
+				LOGGER3('#MediaServer data from buffer readed.')
 				LOGGER('data from buffer to packaging: \n',data_to_send)
 				self.read_queue.get()(data_to_send)
 				LOGGER( 'Data from buffer consumed')
@@ -79,7 +79,8 @@ class MediaServer(threading.Thread):
 
 	
 	def getSocket(self):
-		return self.udpServer.getSocket()
+		#return self.udpServer.getSocket()
+		return (self.HOST,self.PORT)
 	
 	
 
@@ -92,7 +93,7 @@ class MediaServer(threading.Thread):
 	
 	def sendData(self,data):
 		LOGGER( 'MediaServer sendData called')
-		self.udpServer.sendData(data,self.peerSocket)
+		#self.udpServer.sendData(data,self.peerSocket)
 	
 
 

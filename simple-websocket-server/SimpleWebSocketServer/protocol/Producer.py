@@ -25,7 +25,7 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 
 	def on_read_result(self,data):
 		LOGGER( 'on_read_result called !!!')
-		LOGGER3( '#Producer on_read_result called with data:\n',data)
+		LOGGER3( '#Producer on_read_result called with data:\n')
 		if data==None: self.payload=''		
 		self.payload=data
 		self.inProgress=False	
@@ -78,8 +78,8 @@ class ProducerClosure(ccn.Closure,callbackInfo):
 			
 			'''
 			
-			LOGGER('payload to pack into CO message:\n',self.payload)
-			LOGGER3('#Producer payload to pack into CO message:\n',self.payload)
+			#LOGGER('payload to pack into CO message:\n',self.payload)
+			LOGGER3('#Producer payload to pack into CO message:\n')
 
 
 

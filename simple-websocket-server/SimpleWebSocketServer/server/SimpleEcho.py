@@ -1,6 +1,6 @@
 import json
 from SimpleWebSocketServer import WebSocket
-from server.MediaServer import MediaServer
+#from server.MediaServer import MediaServer
 from protocol.Register import ccnRegister
 from utils import logger
 
@@ -41,7 +41,7 @@ class SimpleEcho(WebSocket):
 	def addNewClient(self,data,obj):
 		LOGGER( 'Client is registered: ',registeredClients.has_key(data['userId']))
 		if not registeredClients.has_key(data['userId']): 
-			newCCNRegisterThread=ccnRegister(data['userId'],self.sendRequestToIPClient,data,self.mediaServer)   
+			newCCNRegisterThread=ccnRegister(data['userId'],self.sendRequestToIPClient,data,None)#self.mediaServer)   
 			newCCNRegisterThread.start()
 			info={}
 			info['obj']=obj
@@ -50,7 +50,7 @@ class SimpleEcho(WebSocket):
 				################################################
 			LOGGER( 'Generating answer for REGISTER')
 			message={}
-			message['ProxyServer']= self.mediaServer.getSocket()
+			message['ProxyServer']= newCCNRegisterThread.mediaServer.getSocket()
 			"""			
 			message={'ProxyServer':{
 					'host':self.mediaServer['HOST'],
@@ -106,24 +106,31 @@ class SimpleEcho(WebSocket):
 	# storing data into buffer	
 	def putMedia(self,data):
 		LOGGER('#SimpleEcho putMedia called')
-		registeredClients['test']['threadRef'].onPutMedia(data)
+		registeredClients['/robert']['threadRef'].onPutMedia(data)
 
 	# retrieving media packets
 	def getMedia(self,data):
 		LOGGER( '#SimpleEcho getMedia called')
-		registeredClients[data['From']]['threadRef'].onGetMedia(data,self.getMediaCallback,self.getMediaErrorCallback)
+		if not registeredClients.has_key(data['From']):
+			LOGGER3('#SimpleEcho getMedia : user not registered !')
+			self.getMediaErrorCallback(data['From'],'user not registered !')
+		else:		
+			registeredClients[data['From']]['threadRef'].onGetMedia(data,self.getMediaCallback,self.getMediaErrorCallback)
 
 
 	########################  tutaj poprawic wysylanie do calling -- socket
 		
 	def getMediaCallback(self,calling,data,message):
-		LOGGER( 'getMediaCallback called')
+		LOGGER( '#SimpleEcho getMediaCallback called')
 		host='192.168.0.149'
 		port=8891
-		LOGGER( 'Data to be send: ')
+		LOGGER( '#SimpleEcho Data to be send: ')
 		#LOGGER( data)
+		LOGGER3('#SimpleEcho SIGNALLING ')
 		self.sendMessage(unicode(json.dumps(message,ensure_ascii=False)))
-		
+		LOGGER3('#SimpleEcho DATA')
+		self.sendMessage(data)		
+
 		# do poprawienia przy wysylaniu
 		#self.mediaServer.udpServer.socket.sendto(data,(host,port))
 
@@ -146,9 +153,11 @@ class SimpleEcho(WebSocket):
 		LOGGER( 'Peer connected. Address: ',self.address)
 		LOGGER3( 'Peer connected. Address: ',self.address)
 
+		'''
 		if hasattr(self,'mediaServer')==False:
 			self.mediaServer=MediaServer()
 			self.mediaServer.start()
+		'''
 
 		clients.append(self)
 		LOGGER( 'after append')
@@ -224,8 +233,10 @@ class SimpleEcho(WebSocket):
 			#values=bytearray(self.data)
 			LOGGER( 'Inside loop')
 			LOGGER( self.data.__sizeof__())
+			'''			
 			for v in self.data:
 				LOGGER( v)
+			'''
 			self.putMedia(self.data)
 			#LOGGER( dir(values))
 			#LOGGER( 'Length array: '+str(values.length))
