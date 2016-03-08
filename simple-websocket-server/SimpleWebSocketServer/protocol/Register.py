@@ -5,9 +5,9 @@ from protocol.Producer import ProducerClosure
 from server.MediaServer import MediaServer
 
 
-LOGGER=logger.Logger(True).get_logger()
-LOGGER2=logger.Logger(True).get_logger()
-LOGGER3=logger.Logger(True).get_logger()
+LOGGER=logger.Logger().get_logger()
+LOGGER2=logger.Logger().get_logger()
+LOGGER3=logger.Logger().get_logger()
 
 class ccnRegister(threading.Thread):
 	def __init__(self,threadId,callback,sdp,peerAddress):
@@ -85,7 +85,7 @@ class ccnRegister(threading.Thread):
 		if 'name' in globals(): LOGGER2('name  exists in globals')
 		
 					
-		co=ccnHandler.get(name,timeoutms=100)
+		co=ccnHandler.get(name,timeoutms=500)
 		LOGGER2('thread onMakeCall after co get !!!')
 		LOGGER('onMakeCall called !!!!')
 		

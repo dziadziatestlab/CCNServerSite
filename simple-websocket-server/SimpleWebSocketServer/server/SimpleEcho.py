@@ -4,9 +4,9 @@ from SimpleWebSocketServer import WebSocket
 from protocol.Register import ccnRegister
 from utils import logger
 
-LOGGER=logger.Logger(True).get_logger()
-LOGGER2=logger.Logger(True).get_logger()
-LOGGER3=logger.Logger(True).get_logger()
+LOGGER=logger.Logger().get_logger()
+LOGGER2=logger.Logger().get_logger()
+LOGGER3=logger.Logger().get_logger()
 
 clients=[]
 registeredClients={}

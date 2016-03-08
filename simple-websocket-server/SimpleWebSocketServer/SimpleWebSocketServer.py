@@ -359,8 +359,9 @@ class WebSocket(object):
       opcode = BINARY
       if isinstance(data, unicode):
          opcode = TEXT
+	 print "## SimpleWebSocketServer data:\n",data
       print "## SimpleWebSocketServer OPCODE: ",opcode
-      print "## SimpleWebSocketServer data:\n",data
+      
       self._sendMessage(False, opcode, data)
    
 
