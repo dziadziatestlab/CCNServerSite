@@ -8,7 +8,7 @@ import Queue,time
 
 LOGGER=logger.Logger().get_logger()
 LOGGER2=logger.Logger().get_logger()
-LOGGER3=logger.Logger(True).get_logger()
+LOGGER3=logger.Logger().get_logger()
 
 #from collections import deque
 
